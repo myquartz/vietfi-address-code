@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "vietfi-address-code"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-12bim3a7zr6k3"
+s3_prefix = "vietfi-address-code"
+region = "ap-southeast-1"
+capabilities = "CAPABILITY_IAM"
+image_repositories = []

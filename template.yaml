@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  vietfi-address-code
+
+  SAM Template for AddressCodeFunction
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+
+Resources:
+  AddressCodeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: address_code_func/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Events:
+        CountryList:
+          Type: Api
+          Properties:
+            Path: /countries
+            Method: get
+        CountryGet:
+          Type: Api
+          Properties:
+            Path: /countries/{iso_code}
+            Method: get
+
+Outputs:
+  AddressCodeApi:
+    Description: "API Gateway endpoint URL for Prod stage for AddressCodeFunction"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/countries/"
+  AddressCodeFunction:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt AddressCodeFunction.Arn
+  AddressCodeFunctionIamRole:
+    Description: "Implicit IAM Role created for the function"
+    Value: !GetAtt AddressCodeFunction.Arn

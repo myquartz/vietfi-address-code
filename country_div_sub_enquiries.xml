@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SQLStmtDict xmlns="http://esi.vn/2017/esi-stmt"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://esi.vn/2017/esi-stmt http://esi.vn/2017/esi-stmt/esi-stmt.xsd ">    
+    <SQLStmt id="queryCountries"> 
+        <select>
+            <![CDATA[
+            SELECT
+                countryid, iso3, name
+            FROM sys_country 
+            ORDER BY iso2
+            ]]>
+        </select>  
+    </SQLStmt>
+    <SQLStmt id="queryDivisions"> 
+    	<param name="countryid" type="int"/>
+        <select>
+            <![CDATA[
+            SELECT
+                divisionid, division_cd, division_name
+            FROM sys_division where countryid = ?
+            ORDER BY gso_code, division_cd
+            ]]>
+        </select>  
+    </SQLStmt>
+    <SQLStmt id="querySubDiv"> 
+    	<param name="divisionid" type="int"/>
+        <select>
+            <![CDATA[
+            SELECT
+                	subdivid,subdiv_cd, l2subdiv_cd, subdiv_name
+            FROM sys_division_sub where divisionid = ? AND l2subdiv_cd IS NULL
+            	AND subdiv_cd <> '000'
+            ORDER BY subdiv_name
+            ]]>
+        </select>  
+    </SQLStmt>
+    <SQLStmt id="querySubDivl2"> 
+    	<param name="divisionid" type="int"/>
+    	<param name="subdiv_cd" type="string"/>
+        <select>
+            <![CDATA[
+            SELECT subdivid,subdiv_cd, l2subdiv_cd, subdiv_name
+            FROM sys_division_sub where divisionid = ? AND l2subdiv_cd IS NOT NULL and subdiv_cd = ?
+            ORDER BY subdiv_name
+            ]]>
+        </select>  
+    </SQLStmt>
+</SQLStmtDict>
