@@ -8,8 +8,7 @@ s3_prefix = "vietfi-address-code"
 region = "ap-southeast-1"
 capabilities = "CAPABILITY_IAM"
 image_repositories = []
-<<<<<<< Updated upstream
-=======
+
 resolve_s3 = true
 confirm_changeset = true
->>>>>>> Stashed changes
+

@@ -27,12 +27,9 @@ class CountryCDResource(Resource):
                         WHERE iso3 = ?", (country_code,))
             country = c.fetchall()
             conn.close()
-            #country = "Việt nam"
-            str = jsonify(country)
-            #print("str =" + str)
 
-            #response = Response(jsonify(country), content_type="application/json; charset=utf-8")
-            #print("response =" + response)
+            str = jsonify(country)
+
             return str
         except Exception as e:
             abort(500, str(e))
@@ -49,9 +46,7 @@ class DivisionsResource(Resource):
             conn.close()
             response = jsonify(divisions)
             response.headers["Content-Type"] = "application/json"
-            # print("str =" + str)
-            # response = Response(str, content_type="application/json; charset=utf-8")
-            # print("response =" + response)
+            
             return response
         except Exception as e:
             abort(500, str(e))

@@ -1,23 +1,19 @@
-<<<<<<< Updated upstream
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
   vietfi-address-code
 
-  SAM Template for AddressCodeFunction
+  SAM Template for AddressFunction
 
 Globals:
   Function:
     Timeout: 30
     MemorySize: 256
 
-=======
->>>>>>> Stashed changes
 Resources:
-  AddressCodeFunction:
+  AddressFunction:
     Type: AWS::Serverless::Function
     Properties:
-<<<<<<< Updated upstream
       CodeUri: address_code_func/
       Handler: app.lambda_handler
       Runtime: python3.9
@@ -36,57 +32,12 @@ Resources:
             Method: get
 
 Outputs:
-  AddressCodeApi:
-    Description: "API Gateway endpoint URL for Prod stage for AddressCodeFunction"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/countries/"
-  AddressCodeFunction:
-    Description: "Lambda Function ARN"
-    Value: !GetAtt AddressCodeFunction.Arn
-  AddressCodeFunctionIamRole:
-    Description: "Implicit IAM Role created for the function"
-    Value: !GetAtt AddressCodeFunction.Arn
-=======
-      Handler: app.lambda_handler
-      Runtime: python3.10
-      CodeUri: .
-      Timeout: 30
-      MemorySize: 128
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            Path: /
-            Method: ANY
-        SwaggerApi:
-          Type: Api
-          Properties:
-            Path: /swagger
-            Method: ANY
-            RestApiId:
-              Ref: SwaggerRestApi
-            RestApiRootResourceId:
-              Fn::GetAtt:
-                - SwaggerRestApi
-                - RootResourceId
-
-  SwaggerRestApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: prod
-      DefinitionUri: api/country-subdivision.yaml
-
-Outputs:
   AddressApi:
     Description: "API Gateway endpoint URL for Prod stage for AddressCodeFunction"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/countries/"
-    Export:
-      Name: "AddressApiUrl"
-
-AddressFunction:
+  AddressFunction:
     Description: "Lambda Function ARN"
     Value: !GetAtt AddressFunction.Arn
-
-AddressFunctionIamRole:
+  AddressFunctionIamRole:
     Description: "Implicit IAM Role created for the function"
     Value: !GetAtt AddressFunction.Arn
->>>>>>> Stashed changes
