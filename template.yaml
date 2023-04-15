@@ -10,6 +10,14 @@ Globals:
     Timeout: 30
     MemorySize: 256
 
+Parameters:
+  BucketName:
+    Type: String
+    Description: Bucket name for get DB File
+  DataFileKey:
+    Type: String
+    Default: "country_div_sub.sqlite3"
+
 Resources:
   AddressCodeFunction:
     Type: AWS::Serverless::Function
@@ -17,6 +25,23 @@ Resources:
       CodeUri: address_code_func/
       Handler: app.lambda_handler
       Runtime: python3.9
+      Environment:
+        Variables:
+          TZ: Asia/Ho_Chi_Minh
+          BUCKET_NAME: !Ref BucketName
+          DB_FILE_KEY: !Ref DataFileKey
+      Policies:
+        - Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:ListBucket
+              - s3:PutObject
+            Resource: 
+              - !Sub 'arn:aws:s3:::${BucketName}/*'
+              - !Sub 'arn:aws:s3:::${BucketName}'
+
       Architectures:
         - x86_64
       Events:

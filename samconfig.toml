@@ -8,3 +8,5 @@ s3_prefix = "vietfi-address-code"
 region = "ap-southeast-1"
 capabilities = "CAPABILITY_IAM"
 image_repositories = []
+
+parameter_overrides = "BucketName=\"vietfi-api-data\""
