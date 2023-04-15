@@ -32,7 +32,8 @@ bucketName = os.getenv('BUCKET_NAME')
 objectName = os.getenv('DB_FILE_KEY', 'country_div_sub.sqlite3')
 
 client = boto3.client('s3')
-if client is not None:
+if client is not None and not os.path.exists(DB_DIR+"/"+objectName):
+    print("Loading from s3://"+bucketName+"/"+objectName)
     s3resp = client.get_object(
         Bucket=bucketName,
         Key=objectName
@@ -121,10 +122,15 @@ def lambda_handler(event, context):
         resource_str = event['resource']
         method = event['httpMethod']
 
+        print("Requesting " + method + " " + resource_str)
+
         if resource_str == '/countries' and method == 'GET':
             cur.execute("SELECT iso3 AS code, nicename AS name FROM sys_country ORDER BY iso3")
             return {
                 "statusCode": 200,
+                "headers": {
+                    "X-Count": str(total)
+                },
                 "body": json.dumps(list(map(toCountryObj, cur.fetchall()))),
             }
             
@@ -132,9 +138,24 @@ def lambda_handler(event, context):
             iso_code = event['pathParameters']['iso_code']
             params = (iso_code,)
             cur.execute("SELECT iso3, nicename FROM sys_country WHERE iso3 = ?", params)
+            row = cur.fetchone()
+            if row is None:
+                return {
+                    "statusCode": 404,
+                    "headers": {
+                        "X-Count": str(total)
+                    },
+                    "body": json.dumps({
+                        "message": "object not found, iso_code="+iso_code,
+                    }),
+                }
+                
             return {
                 "statusCode": 200,
-                "body": json.dumps(toCountryObj(cur.fetchone())),
+                "headers": {
+                    "X-Count": str(total)
+                },
+                "body": json.dumps(toCountryObj(row)),
             }
 
     except Exception as err:

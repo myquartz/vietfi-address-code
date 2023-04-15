@@ -40,11 +40,12 @@ Run functions locally and invoke them with the `sam local invoke` command.
 $ sam local invoke AddressCodeFunction --event events/event.json
 ```
 
-The SAM CLI can also emulate your application's API. Use the `sam local start-api` to run the API locally on port 3000.
+The SAM CLI can also emulate your application's API. Use the `sam local start-api` to run the API locally on port 3000 for testing.
 
 ```bash
-$ sam local start-api
-$ curl http://localhost:3000/
+$ sam local start-api --profile default -n test-env.json
+# Other termninal
+$ curl http://localhost:3000/countries
 ```
 
 ## Tests
