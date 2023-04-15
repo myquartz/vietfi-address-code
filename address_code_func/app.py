@@ -75,6 +75,8 @@ def toCountryObj(arr):
     }
 
 def lambda_handler(event, context):
+    global corsAllow
+    global dbcon
     """Sample pure Lambda function
 
     Parameters
@@ -96,7 +98,7 @@ def lambda_handler(event, context):
         Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
     """
 
-    #print(event['requestContext'])
+    #print(event)
     #print(type(event['requestContext']['requestId']))
     # try:
     #     ip = requests.get("http://checkip.amazonaws.com/")
@@ -111,11 +113,13 @@ def lambda_handler(event, context):
         requestId = '';
         if type(event['requestContext']) is dict:
             requestId = event['requestContext']['requestId'];
+            print("requestId = "+requestId)
+            params = (requestId, json.dumps(event['requestContext']), event['body'])
+            cur.execute("INSERT INTO access_log (REQ_ID, REQ_TIME, REQ_HEADER, REQ_BODY) VALUES (?,CURRENT_TIMESTAMP,?,?)",
+                params)
         else:
             print("No requestId")
         
-        cur.execute("INSERT INTO access_log (REQ_ID, REQ_TIME, REQ_HEADER, REQ_BODY) VALUES (?,CURRENT_TIMESTAMP,?,?)",
-        (requestId, json.dumps(event['requestContext']), event['body']))
         cur.execute("SELECT COUNT(*) FROM access_log")
         row = cur.fetchone()
         total = row[0]
