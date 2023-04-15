@@ -32,7 +32,7 @@ bucketName = os.getenv('BUCKET_NAME')
 objectName = os.getenv('DB_FILE_KEY', 'country_div_sub.sqlite3')
 
 client = boto3.client('s3')
-if client is not None and not os.path.exists(DB_DIR+"/"+objectName):
+if client is not None and bucketName is not None and not os.path.exists(DB_DIR+"/"+objectName):
     print("Loading from s3://"+bucketName+"/"+objectName)
     s3resp = client.get_object(
         Bucket=bucketName,
@@ -42,6 +42,9 @@ if client is not None and not os.path.exists(DB_DIR+"/"+objectName):
     with io.FileIO(DB_DIR+"/"+objectName, 'w') as file:
         while file.write(body.read(amt=4096)):
             pass
+
+# CORS config
+corsAllow = os.getenv('CORS_ALLOW_ORIGIN', '')
 
 # Global DB Connection
 dbcon = sqlite3.connect(DB_DIR+"/"+objectName)
@@ -124,13 +127,24 @@ def lambda_handler(event, context):
 
         print("Requesting " + method + " " + resource_str)
 
+        if corsAllow is not None and corsAllow != '':
+            headers = {
+                "X-Count": str(total),
+                "access-control-allow-origin": corsAllow.strip("'\" "),
+                "access-control-allow-headers": 'Accept,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                "access-control-allow-methods": 'GET, POST, PUT, DELETE',
+                "access-control-max-age": '3600'
+            }
+        else:
+            headers = {
+                "X-Count": str(total)
+            }
+
         if resource_str == '/countries' and method == 'GET':
             cur.execute("SELECT iso3 AS code, nicename AS name FROM sys_country ORDER BY iso3")
             return {
                 "statusCode": 200,
-                "headers": {
-                    "X-Count": str(total)
-                },
+                "headers": headers,
                 "body": json.dumps(list(map(toCountryObj, cur.fetchall()))),
             }
             
@@ -142,9 +156,7 @@ def lambda_handler(event, context):
             if row is None:
                 return {
                     "statusCode": 404,
-                    "headers": {
-                        "X-Count": str(total)
-                    },
+                    "headers": headers,
                     "body": json.dumps({
                         "message": "object not found, iso_code="+iso_code,
                     }),
@@ -152,9 +164,7 @@ def lambda_handler(event, context):
                 
             return {
                 "statusCode": 200,
-                "headers": {
-                    "X-Count": str(total)
-                },
+                "headers": headers,
                 "body": json.dumps(toCountryObj(row)),
             }
 

@@ -26,6 +26,14 @@ sam deploy --guided
 
 You can find your API Gateway Endpoint URL in the output values displayed after deployment.
 
+```bash
+aws s3 cp s3-bucket/* s3://vietfi-api-data/
+```
+
+> Note: Function needs data file uploaded to Bucket, change bucket name `vietfi-api-data` as your S3 bucket name.
+> After grant S3 Bucket for public access of index.html, now you can access to https://vietfi-api-data.s3.ap-southeast-1.amazonaws.com/index.html for demostration.
+
+
 ## Use the SAM CLI to build and test locally
 
 Build your application with the `sam build --use-container` command.

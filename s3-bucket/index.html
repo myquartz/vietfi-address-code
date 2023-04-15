@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Address Code demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" 
+      integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+  </head>
+  <body onload="onLoad()">
+    <div class="container">
+      <!-- Content here -->
+      <h1>Hello, This is Address Code Population Demo!</h1>
+      <p>We currently support for Vietnam's Division only (Select Viet Nam in the list)</p>
+      <form name="cdv">
+        <div class="mb-3">
+          <label for="countrySelect" class="form-label">Country</label>
+          <select id="countrySelect" class="form-select" aria-label="Country selection" onchange="selectCountry(this)">
+            <option value="" selected>- wait -</option>
+          </select>
+          <div id="countryHelp" class="form-text">Please select country first</div>
+        </div>
+        <div class="mb-3">
+          <label for="divisionSelect" class="form-label">Division</label>
+          <select id="divisionSelect" class="form-select" aria-label="Division selection">
+            <option value="" selected>- select country first -</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="subDivSelect" class="form-label">Sub Division</label>
+          <select id="subDivSelect" class="form-select" aria-label="Sub division selection">
+            <option value="" selected>- select division please -</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="l2SubDivSelect" class="form-label">Level 2 Sub Division</label>
+          <select id="l2SubDivSelect" class="form-select" aria-label="Level 2 Sub division selection">
+            <option value="" selected>- select sub division please -</option>
+          </select>
+        </div>
+        <button type="submit" onclick="alert('You selected '+JSON.stringify([document.cdv.elements[0].value,document.cdv.elements[1].value,document.cdv.elements[2].value,document.cdv.elements[3].value])); return false" 
+          class="btn btn-primary">Submit</button>
+      </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" 
+      integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+    <script>
+      var apiURL = 'https://mop1tfj2og.execute-api.ap-southeast-1.amazonaws.com/Prod';
+      function onLoad() {
+        fetch(apiURL+"/countries")
+          .then(function(resp) {
+            if(resp.status != 200)
+              throw "HTTP Error "+resp.status;
+            return resp.json();
+          })
+          .then(function(countries) {
+            var elm = document.getElementById('countrySelect');
+            elm.remove(0);
+            var def = document.createElement('option');
+            def.text = '-- please select --';
+            elm.add(def);
+            countries.forEach(c => {
+              var opt = document.createElement('option');
+              opt.value = c.code;
+              opt.text = c.name;
+              elm.add(opt);
+            });
+        })
+        .catch(function(e) {
+          alert(e);
+        });
+      }
+      
+      function selectCountry(elm) {
+        if(elm.value) {
+          fetch(apiURL+"/countries/"+elm.value+"/divisions")
+            .then(function(resp) {
+              if(resp.status != 200)
+                throw "HTTP Error "+resp.status;
+              return resp.json();
+            })
+            .then(function(country) {
+              var elm = document.getElementById('divisionSelect');
+              elm.remove(0);
+              var def = document.createElement('option');
+              def.text = '-- please select --';
+              elm.add(def);
+              country.subdivisions.forEach(c => {
+                var opt = document.createElement('option');
+                opt.value = c.code;
+                opt.text = c.name;
+                elm.add(opt);
+              });
+            })
+            .catch(function(e) {
+              //alert(e);
+
+            });
+        }
+        else
+        //clear all except first item
+          document.getElementById('divisionSelect').length = 1;
+      }
+    </script>
+  </body>
+</html>
