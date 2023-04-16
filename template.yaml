@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   vietfi-address-code
 
-  SAM Template for AddressCodeFunction
+  SAM Template for AddressFunction
 
 Globals:
   Api:
@@ -78,14 +78,21 @@ Resources:
             RestApiId: !Ref AddressCodeApi
             Path: /countries/{iso_code}
             Method: get
+        DivisionList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AddressCodeApi
+            Path: /countries/{iso_code}/divisions
+            Method: get
+
 
 Outputs:
-  AddressCodeApi:
+  AddressApi:
     Description: "API Gateway endpoint URL for Prod stage for AddressCodeFunction"
     Value: !Sub "https://${AddressCodeApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/countries/"
   AddressCodeFunction:
     Description: "Lambda Function ARN"
-    Value: !GetAtt AddressCodeFunction.Arn
-  AddressCodeFunctionIamRole:
+    Value: !GetAtt AddressFunction.Arn
+  AddressFunctionIamRole:
     Description: "Implicit IAM Role created for the function"
-    Value: !GetAtt AddressCodeFunction.Arn
+    Value: !GetAtt AddressFunction.Arn

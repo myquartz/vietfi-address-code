@@ -11,7 +11,9 @@ import boto3
 Manual setup: 
 
 1. Create sqlite3 data file at local, create tables, index, data..
-2. Copy data file to AWS S3 by command (assume "vietfi-api-data" is Bucket Name): `aws s3 cp country-div-sub.db s3://vietfi-api-data/country-div-sub.db`
+2. Copy data file to AWS S3 
+   by command (assume "vietfi-api-data" is Bucket Name): 
+   `aws s3 cp country-div-sub.db s3://vietfi-api-data/country-div-sub.db`
 
 How this code works:
 
@@ -32,14 +34,14 @@ bucketName = os.getenv('BUCKET_NAME')
 objectName = os.getenv('DB_FILE_KEY', 'country_div_sub.sqlite3')
 
 client = boto3.client('s3')
-if client is not None and bucketName is not None and not os.path.exists(DB_DIR+"/"+objectName):
-    print("Loading from s3://"+bucketName+"/"+objectName)
+if client is not None and bucketName is not None and not os.path.exists(DB_DIR + "/" + objectName):
+    print("Loading from s3://" + bucketName + "/" + objectName)
     s3resp = client.get_object(
         Bucket=bucketName,
         Key=objectName
     )
     body = s3resp['Body']
-    with io.FileIO(DB_DIR+"/"+objectName, 'w') as file:
+    with io.FileIO(DB_DIR + "/" + objectName, 'w') as file:
         while file.write(body.read(amt=4096)):
             pass
 
@@ -47,7 +49,7 @@ if client is not None and bucketName is not None and not os.path.exists(DB_DIR+"
 corsAllow = os.getenv('CORS_ALLOW_ORIGIN', '')
 
 # Global DB Connection
-dbcon = sqlite3.connect(DB_DIR+"/"+objectName)
+dbcon = sqlite3.connect(DB_DIR + "/" + objectName)
 
 dbcur = dbcon.cursor()
 try:
@@ -66,10 +68,11 @@ try:
 finally:
     if dbcur is not None:
         dbcur.close()
-    #print(dbcur)
+    # print(dbcur)
+
 
 def toCountryObj(arr):
-    return { 
+    return {
         "code": arr[0],
         "name": arr[1]
     }
@@ -84,7 +87,8 @@ def lambda_handler(event, context):
     event: dict, required
         API Gateway Lambda Proxy Input Format
 
-        Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
+        Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        #api-gateway-simple-proxy-for-lambda-input-format
 
     context: object, required
         Lambda Context runtime methods and attributes
@@ -110,7 +114,7 @@ def lambda_handler(event, context):
     total = 0
     cur = dbcon.cursor()
     try:
-        requestId = '';
+        requestId = ''
         if type(event['requestContext']) is dict:
             requestId = event['requestContext']['requestId'];
             print("requestId = "+requestId)
@@ -151,7 +155,6 @@ def lambda_handler(event, context):
                 "headers": headers,
                 "body": json.dumps(list(map(toCountryObj, cur.fetchall()))),
             }
-            
         elif resource_str == '/countries/{iso_code}' and method == 'GET':
             iso_code = event['pathParameters']['iso_code']
             params = (iso_code,)
@@ -162,7 +165,7 @@ def lambda_handler(event, context):
                     "statusCode": 404,
                     "headers": headers,
                     "body": json.dumps({
-                        "message": "object not found, iso_code="+iso_code,
+                        "message": "object not found, iso_code=" + iso_code,
                     }),
                 }
                 
@@ -171,13 +174,37 @@ def lambda_handler(event, context):
                 "headers": headers,
                 "body": json.dumps(toCountryObj(row)),
             }
+        # API entry /countries/{country-iso3}/divisions
+        elif resource_str == '/countries/{iso_code}/divisions' and method == 'GET':
+            iso_code = event['pathParameters']['iso_code']
+            params = (iso_code,)
+            cur.execute("SELECT a.division_cd, a.division_name \
+                FROM sys_division a, sys_country b \
+                WHERE a.countryid = b.countryid \
+                AND b.iso3 = ?", params)
+
+            row = cur.fetchone()
+            if row is None:
+                return {
+                    "statusCode": 404,
+                    "headers": headers,
+                    "body": json.dumps({
+                        "message": "object not found, iso_code=" + iso_code,
+                    }),
+                }
+
+            return {
+                "statusCode": 200,
+                "headers": headers,
+                "body": json.dumps(list(map(toCountryObj, cur.fetchall())), ensure_ascii=False),
+            }
 
     except Exception as err:
         return {
             "statusCode": 500,
             "body": json.dumps({
-                "message": "SQL error: "+str(err)
-            }),    
+                "message": "SQL error: " + str(err)
+            }),
         }
     finally:
         if cur is not None:
@@ -186,7 +213,7 @@ def lambda_handler(event, context):
     return {
         "statusCode": 200,
         "body": json.dumps({
-            "message": "access_log count="+str(total),
+            "message": "access_log count=" + str(total),
             # "location": ip.text.replace("\n", "")
         }),
     }
