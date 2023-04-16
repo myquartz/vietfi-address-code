@@ -30,6 +30,13 @@ Resources:
           Properties:
             Path: /countries/{iso_code}
             Method: get
+        DivisionList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AddressCodeApi
+            Path: /countries/{iso_code}/divisions
+            Method: get
+
 
 Outputs:
   AddressApi:
