@@ -22,13 +22,15 @@
         </div>
         <div class="mb-3">
           <label for="divisionSelect" class="form-label">Division</label>
-          <select id="divisionSelect" class="form-select" aria-label="Division selection">
+          <select id="divisionSelect" class="form-select" aria-label="Division selection"
+            onchange="selectDivision(document.getElementById('countrySelect').value, this)">
             <option value="" selected>- select country first -</option>
           </select>
         </div>
         <div class="mb-3">
           <label for="subDivSelect" class="form-label">Sub Division</label>
-          <select id="subDivSelect" class="form-select" aria-label="Sub division selection">
+          <select id="subDivSelect" class="form-select" aria-label="Sub division selection"
+          onchange="selectSubDivision(document.getElementById('countrySelect').value, document.getElementById('divisionSelect').value, this)">
             <option value="" selected>- select division please -</option>
           </select>
         </div>
@@ -80,13 +82,75 @@
                 throw "HTTP Error "+resp.status;
               return resp.json();
             })
-            .then(function(country) {
+            .then(function(divisions) {
               var elm = document.getElementById('divisionSelect');
               elm.remove(0);
               var def = document.createElement('option');
               def.text = '-- please select --';
               elm.add(def);
-              country.subdivisions.forEach(c => {
+              divisions.forEach(c => {
+                var opt = document.createElement('option');
+                opt.value = c.code;
+                opt.text = c.name;
+                elm.add(opt);
+              });
+            })
+            .catch(function(e) {
+              //alert(e);
+
+            });
+        }
+        else
+        //clear all except first item
+          document.getElementById('divisionSelect').length = 1;
+      }
+
+      function selectDivision(ctry, elm) {
+        if(elm.value) {
+          fetch(apiURL+"/countries/"+ctry+"/divisions/"+elm.value+"/subdivisions")
+            .then(function(resp) {
+              if(resp.status != 200)
+                throw "HTTP Error "+resp.status;
+              return resp.json();
+            })
+            .then(function(subdivisions) {
+              var elm = document.getElementById('subDivSelect');
+              elm.remove(0);
+              var def = document.createElement('option');
+              def.text = '-- please select --';
+              elm.add(def);
+              subdivisions.forEach(c => {
+                var opt = document.createElement('option');
+                opt.value = c.code;
+                opt.text = c.name;
+                elm.add(opt);
+              });
+            })
+            .catch(function(e) {
+              //alert(e);
+
+            });
+        }
+        else
+        //clear all except first item
+          document.getElementById('divisionSelect').length = 1;
+      }
+
+      function selectSubDivision(ctry, div, elm) {
+        if(elm.value) {
+          fetch(apiURL+"/countries/"+ctry+"/divisions/"+div+"/subdivisions/"+elm.value+"/l2subdivs")
+            .then(function(resp) {
+              if(resp.status != 200)
+                throw "HTTP Error "+resp.status;
+              return resp.json();
+            })
+            .then(function(l2subdivisions) {
+              var elm = document.getElementById('l2SubDivSelect');
+              elm.remove(0);
+              var def = document.createElement('option');
+              def.text = '-- please select --';
+              elm.add(def);
+              l2subdivisions.forEach(c => {
                 var opt = document.createElement('option');
                 opt.value = c.code;
                 opt.text = c.name;
