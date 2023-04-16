@@ -16,7 +16,7 @@ env:
   TESTING_STACK_NAME: vietfi-address-code
   TESTING_PIPELINE_EXECUTION_ROLE: arn:aws:iam::722273251097:role/aws-sam-cli-managed-address-PipelineExecutionRole-MXX3CITQG890
   TESTING_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::722273251097:role/aws-sam-cli-managed-addre-CloudFormationExecutionR-1119BYRZD48LW
-  TESTING_ARTIFACTS_BUCKET: 
+  TESTING_ARTIFACTS_BUCKET: aws-sam-cli-managed-default-samclisourcebucket-12bim3a7zr6k3
   # If there are functions with "Image" PackageType in your template,
   # uncomment the line below and add "--image-repository ${TESTING_IMAGE_REPOSITORY}" to
   # testing "sam package" and "sam deploy" commands.
