@@ -40,6 +40,7 @@ jobs:
       - uses: actions/checkout@v3
       - run: |
           # trigger the tests here
+          sam validate --lint
 
   delete-feature:
     if: startsWith(github.event.ref, 'feature') && github.event_name == 'delete'
@@ -199,18 +200,18 @@ jobs:
             --no-fail-on-empty-changeset \
             --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
 
-  integration-test:
-    if: github.ref == 'refs/heads/main'
-    needs: [deploy-testing]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: |
-          # trigger the integration tests here
+  # integration-test:
+  #   if: github.ref == 'refs/heads/main'
+  #   needs: [deploy-testing]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - run: |
+  #         # trigger the integration tests here
 
   deploy-prod:
     if: github.ref == 'refs/heads/main'
-    needs: [integration-test]
+    needs: [deploy-testing]
     runs-on: ubuntu-latest
     # Configure GitHub Action Environment to have a manual approval step before deployment to production
     # https://docs.github.com/en/actions/reference/environments
