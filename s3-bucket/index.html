@@ -84,7 +84,7 @@
             })
             .then(function(divisions) {
               var elm = document.getElementById('divisionSelect');
-              elm.remove(0);
+              elm.length = 0;
               var def = document.createElement('option');
               def.text = '-- please select --';
               elm.add(def);
@@ -115,7 +115,7 @@
             })
             .then(function(subdivisions) {
               var elm = document.getElementById('subDivSelect');
-              elm.remove(0);
+              elm.length = 0;
               var def = document.createElement('option');
               def.text = '-- please select --';
               elm.add(def);
@@ -146,7 +146,7 @@
             })
             .then(function(l2subdivisions) {
               var elm = document.getElementById('l2SubDivSelect');
-              elm.remove(0);
+              elm.length = 0;
               var def = document.createElement('option');
               def.text = '-- please select --';
               elm.add(def);
