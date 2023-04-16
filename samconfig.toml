@@ -8,6 +8,6 @@ s3_prefix = "vietfi-address-code"
 region = "ap-southeast-1"
 capabilities = "CAPABILITY_IAM"
 image_repositories = []
-resolve_s3 = true
+resolve_s3 = false
 confirm_changeset = false
 parameter_overrides = "BucketName=\"vietfi-api-data\" DataFileKey=\"country_div_sub.sqlite3\" CorsAllowOrigin=\"'https://vietfi-api-data.s3.ap-southeast-1.amazonaws.com'\""
