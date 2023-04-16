@@ -92,7 +92,7 @@ Outputs:
     Value: !Sub "https://${AddressCodeApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/countries/"
   AddressCodeFunction:
     Description: "Lambda Function ARN"
-    Value: !GetAtt AddressFunction.Arn
+    Value: !GetAtt AddressCodeFunction.Arn
   AddressFunctionIamRole:
     Description: "Implicit IAM Role created for the function"
-    Value: !GetAtt AddressFunction.Arn
+    Value: !GetAtt AddressCodeFunctionRole.Arn
