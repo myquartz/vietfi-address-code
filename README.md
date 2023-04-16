@@ -26,6 +26,14 @@ sam deploy --guided
 
 You can find your API Gateway Endpoint URL in the output values displayed after deployment.
 
+```bash
+aws s3 cp s3-bucket/* s3://vietfi-api-data/
+```
+
+> Note: Function needs data file uploaded to Bucket, change bucket name `vietfi-api-data` as your S3 bucket name.
+> After grant S3 Bucket for public access of index.html, now you can access to https://vietfi-api-data.s3.ap-southeast-1.amazonaws.com/index.html for demostration.
+
+
 ## Use the SAM CLI to build and test locally
 
 Build your application with the `sam build --use-container` command.
@@ -40,11 +48,12 @@ Run functions locally and invoke them with the `sam local invoke` command.
 $ sam local invoke AddressCodeFunction --event events/event.json
 ```
 
-The SAM CLI can also emulate your application's API. Use the `sam local start-api` to run the API locally on port 3000.
+The SAM CLI can also emulate your application's API. Use the `sam local start-api` to run the API locally on port 3000 for testing.
 
 ```bash
-$ sam local start-api
-$ curl http://localhost:3000/
+$ sam local start-api --profile default -n test-env.json
+# Other termninal
+$ curl http://localhost:3000/countries
 ```
 
 ## Tests
