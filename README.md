@@ -1,5 +1,11 @@
 # VietFi-Address-Code
 
+## Software Design
+
+1. Please see [Design (Vietnamese)](Design.vi_VN.md) for more information.
+
+# Development
+
 This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
 
 - address_code_func - Code for the application's Lambda function.
