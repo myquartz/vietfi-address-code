@@ -5,11 +5,6 @@ import sqlite3
 
 # print(os.environ)
 
-<<<<<<< Updated upstream
-DB_DIR = '/tmp'
-# Global DB Connection
-dbcon = sqlite3.connect(DB_DIR+"/sqlite3-test.db")
-=======
 '''
 Manual setup: 
 
@@ -54,7 +49,6 @@ corsAllow = os.getenv('CORS_ALLOW_ORIGIN', '')
 
 # Global DB Connection
 dbcon = sqlite3.connect(DB_DIR + "/" + objectName)
->>>>>>> Stashed changes
 
 dbcur = dbcon.cursor()
 try:
@@ -71,11 +65,6 @@ try:
         dbres.close()
         dbcreate.close()
 finally:
-<<<<<<< Updated upstream
-    dbcur.close()
-    #print(dbcur)
-
-=======
     if dbcur is not None:
         dbcur.close()
     # print(dbcur)
@@ -87,8 +76,6 @@ def toCountryObj(arr):
         "name": arr[1]
     }
 
-
->>>>>>> Stashed changes
 def lambda_handler(event, context):
     """Sample pure Lambda function
 
@@ -128,15 +115,6 @@ def lambda_handler(event, context):
             requestId = event['requestContext']['requestId']
         else:
             print("No requestId")
-<<<<<<< Updated upstream
-
-        with dbcon.cursor() as cur:
-            cur.execute("INSERT INTO access_log (REQ_ID, REQ_TIME, REQ_HEADER, REQ_BODY) VALUES (?,CURRENT_TIMESTAMP,?,?)",
-                (requestId, json.dumps(event['requestContext']), event['body']))
-            cur.execute("SELECT COUNT(*) FROM access_log")
-            row = cur.fetchone()
-            total = row[0]
-=======
 
         cur.execute("INSERT INTO access_log (REQ_ID, REQ_TIME, REQ_HEADER, REQ_BODY) VALUES (?,CURRENT_TIMESTAMP,?,?)",
                     (requestId, json.dumps(event['requestContext']), event['body']))
@@ -217,7 +195,6 @@ def lambda_handler(event, context):
                 "body": json.dumps(list(map(toCountryObj, cur.fetchall())), ensure_ascii=False),
             }
 
->>>>>>> Stashed changes
     except Exception as err:
         return {
             "statusCode": 500,
@@ -229,11 +206,7 @@ def lambda_handler(event, context):
     return {
         "statusCode": 200,
         "body": json.dumps({
-<<<<<<< Updated upstream
-            "message": "hello, count="+str(total),
-=======
             "message": "access_log count=" + str(total),
->>>>>>> Stashed changes
             # "location": ip.text.replace("\n", "")
         }),
     }
