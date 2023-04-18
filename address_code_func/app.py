@@ -1,7 +1,9 @@
 import os
+import io
 import json
 # import requests
 import sqlite3
+import boto3
 
 # print(os.environ)
 
@@ -12,7 +14,6 @@ Manual setup:
 2. Copy data file to AWS S3 
    by command (assume "vietfi-api-data" is Bucket Name): 
    `aws s3 cp country-div-sub.db s3://vietfi-api-data/country-div-sub.db`
-
 
 How this code works:
 
@@ -77,6 +78,8 @@ def toCountryObj(arr):
     }
 
 def lambda_handler(event, context):
+    global corsAllow
+    global dbcon
     """Sample pure Lambda function
 
     Parameters
@@ -99,8 +102,8 @@ def lambda_handler(event, context):
         Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
     """
 
-    # print(event)
-    # print(type(event['requestContext']['requestId']))
+    #print(event)
+    #print(type(event['requestContext']['requestId']))
     # try:
     #     ip = requests.get("http://checkip.amazonaws.com/")
     # except requests.RequestException as e:
@@ -109,18 +112,18 @@ def lambda_handler(event, context):
 
     #     raise e
     total = 0
+    cur = dbcon.cursor()
     try:
         requestId = ''
         if type(event['requestContext']) is dict:
-            requestId = event['requestContext']['requestId']
-            print("requestId = " + requestId)
+            requestId = event['requestContext']['requestId'];
+            print("requestId = "+requestId)
             params = (requestId, json.dumps(event['requestContext']), event['body'])
-            cur.execute(
-                "INSERT INTO access_log (REQ_ID, REQ_TIME, REQ_HEADER, REQ_BODY) VALUES (?,CURRENT_TIMESTAMP,?,?)",
+            cur.execute("INSERT INTO access_log (REQ_ID, REQ_TIME, REQ_HEADER, REQ_BODY) VALUES (?,CURRENT_TIMESTAMP,?,?)",
                 params)
         else:
             print("No requestId")
-
+        
         cur.execute("SELECT COUNT(*) FROM access_log")
         row = cur.fetchone()
         total = row[0]
@@ -152,7 +155,6 @@ def lambda_handler(event, context):
                 "headers": headers,
                 "body": json.dumps(list(map(toCountryObj, cur.fetchall()))),
             }
-
         elif resource_str == '/countries/{iso_code}' and method == 'GET':
             iso_code = event['pathParameters']['iso_code']
             params = (iso_code,)
@@ -166,12 +168,11 @@ def lambda_handler(event, context):
                         "message": "object not found, iso_code=" + iso_code,
                     }),
                 }
-
+                
             return {
                 "statusCode": 200,
                 "headers": headers,
                 "body": json.dumps(toCountryObj(row)),
-
             }
         # API entry /countries/{country-iso3}/divisions
         elif resource_str == '/countries/{iso_code}/divisions' and method == 'GET':
@@ -269,7 +270,7 @@ def lambda_handler(event, context):
                 "headers": headers,
                 "body": json.dumps(list(map(toCountryObj, cur.fetchall())), ensure_ascii=False),
             }
-
+            
     except Exception as err:
         return {
             "statusCode": 500,
@@ -277,6 +278,9 @@ def lambda_handler(event, context):
                 "message": "SQL error: " + str(err)
             }),
         }
+    finally:
+        if cur is not None:
+            cur.close()
 
     return {
         "statusCode": 200,

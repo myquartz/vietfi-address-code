@@ -6,28 +6,76 @@ Description: >
   SAM Template for AddressFunction
 
 Globals:
+  Api:
+    # API Gateway regional endpoints
+    EndpointConfiguration: REGIONAL
+
   Function:
     Timeout: 30
     MemorySize: 256
 
+Parameters:
+  BucketName:
+    Type: String
+    Description: Bucket name for get DB File
+  DataFileKey:
+    Type: String
+    Default: "country_div_sub.sqlite3"
+  CorsAllowOrigin:
+    Type: String
+    Default: "'https://vietfi-api-data.s3.ap-southeast-1.amazonaws.com'"
+    Description: "Allow from, example 'https://vietfi-api-data.s3.ap-southeast-1.amazonaws.com'"
+
 Resources:
-  AddressFunction:
+  AddressCodeApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Description: "AddressCodeApi"
+      StageName: Prod
+      Cors:
+        AllowMethods: "'GET, POST, PUT, DELETE'"
+        AllowHeaders: "'Accept,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: !Ref CorsAllowOrigin
+        MaxAge: "'3600'"
+        AllowCredentials: false
+
+  AddressCodeFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: address_code_func/
       Handler: app.lambda_handler
       Runtime: python3.9
+      Environment:
+        Variables:
+          TZ: Asia/Ho_Chi_Minh
+          CORS_ALLOW_ORIGIN: !Ref CorsAllowOrigin
+          BUCKET_NAME: !Ref BucketName
+          DB_FILE_KEY: !Ref DataFileKey
+      Policies:
+        - Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:ListBucket
+              - s3:PutObject
+            Resource: 
+              - !Sub 'arn:aws:s3:::${BucketName}/*'
+              - !Sub 'arn:aws:s3:::${BucketName}'
+
       Architectures:
         - x86_64
       Events:
         CountryList:
           Type: Api
           Properties:
+            RestApiId: !Ref AddressCodeApi
             Path: /countries
             Method: get
         CountryGet:
           Type: Api
           Properties:
+            RestApiId: !Ref AddressCodeApi
             Path: /countries/{iso_code}
             Method: get
         DivisionList:
@@ -52,10 +100,10 @@ Resources:
 Outputs:
   AddressApi:
     Description: "API Gateway endpoint URL for Prod stage for AddressCodeFunction"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/countries/"
-  AddressFunction:
+    Value: !Sub "https://${AddressCodeApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/countries/"
+  AddressCodeFunction:
     Description: "Lambda Function ARN"
-    Value: !GetAtt AddressFunction.Arn
+    Value: !GetAtt AddressCodeFunction.Arn
   AddressFunctionIamRole:
     Description: "Implicit IAM Role created for the function"
-    Value: !GetAtt AddressFunction.Arn
+    Value: !GetAtt AddressCodeFunctionRole.Arn
