@@ -138,7 +138,7 @@
 
       function selectSubDivision(ctry, div, elm) {
         if(elm.value) {
-          fetch(apiURL+"/countries/"+ctry+"/divisions/"+div+"/subdivisions/"+elm.value+"/l2subdivs")
+          fetch(apiURL+"/countries/"+ctry+"/divisions/"+div+"/subdivisions/"+elm.value+"/l2subdivisions")
             .then(function(resp) {
               if(resp.status != 200)
                 throw "HTTP Error "+resp.status;
