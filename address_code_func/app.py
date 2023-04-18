@@ -199,6 +199,78 @@ def lambda_handler(event, context):
                 "body": json.dumps(list(map(toCountryObj, cur.fetchall())), ensure_ascii=False),
             }
 
+        # API entry
+        # summary: Get all subdivisions of a division
+        # operationId: get_subdivisions
+        # /countries/{country_code}/divisions/{division_code}/subdivisions
+        elif resource_str == '/countries/{iso_code}/divisions/{division_code}/subdivisions' \
+                and method == 'GET':
+            iso_code = event['pathParameters']['iso_code']
+            division_code = event['pathParameters']['division_code']
+            params = (iso_code, division_code,)
+            sqlstatement = "select a.subdiv_cd, a.subdiv_name \
+                from sys_division_sub a, sys_division b, sys_country c \
+                where a.divisionid = b.divisionid \
+                  and b.countryid = c.countryid \
+                  and a.subdiv_cd != '000' and a.l2subdiv_cd is null \
+                  and c.iso3 = ? and b.division_cd = ? \
+                  order by a.subdiv_name"
+            cur.execute(sqlstatement, params)
+            row = cur.fetchone()
+            if row is None:
+                return {
+                    "statusCode": 404,
+                    "headers": headers,
+                    "body": json.dumps({
+                        "message": "object not found for iso_code=" + iso_code + " and division_code " + division_code,
+                    }),
+                }
+
+            return {
+                "statusCode": 200,
+                "headers": headers,
+                "body": json.dumps(list(map(toCountryObj, cur.fetchall())), ensure_ascii=False),
+            }
+
+    # API entry
+        # summary: Get all l2subdivisions of a subdivision
+        # operationId: get_l2subdivisions
+        # /countries/{country_code}/divisions/{division_code}/subdivisions/{subdiv_code}/l2subdivisions
+        elif resource_str == '/countries/{iso_code}/divisions/{division_code}/subdivisions/{subdiv_code}/l2subdivisions' \
+                and method == 'GET':
+            iso_code = event['pathParameters']['iso_code']
+            division_code = event['pathParameters']['division_code']
+            subdiv_code = event['pathParameters']['subdiv_code']
+            params = (iso_code, division_code,subdiv_code,)
+            sqlstatement = "select a.l2subdiv_cd, a.subdiv_name \
+                from sys_division_sub a, sys_division_sub b,sys_division c, sys_country d \
+                where a.subdiv_cd = b.subdiv_cd \
+                  and b.divisionid = c.divisionid \
+                  and c.countryid = d.countryid \
+                  and b.subdiv_cd != '000' \
+                  and b.l2subdiv_cd is null \
+                  and a.l2subdiv_cd is not null \
+                  and a.subdiv_cd = b.subdiv_cd \
+                  and d.iso3 = ? and c.division_cd = ? and b.subdiv_cd = ? \
+                  order by a.subdiv_name"
+
+            cur.execute(sqlstatement, params)
+            row = cur.fetchone()
+            if row is None:
+                return {
+                    "statusCode": 404,
+                    "headers": headers,
+                    "body": json.dumps({
+                        "message": "object not found for iso_code=" + iso_code + ",division_code=" + division_code + "and subdiv_code=" +subdiv_code,
+                    }),
+                }
+
+            return {
+                "statusCode": 200,
+                "headers": headers,
+                "body": json.dumps(list(map(toCountryObj, cur.fetchall())), ensure_ascii=False),
+            }
+            
     except Exception as err:
         return {
             "statusCode": 500,

@@ -1,0 +1,384 @@
+---
+openapi: 3.0.0
+info:
+  title: Address API
+  description: "An API for querying address data by country, division, and subdivision using ISO-3166 standard codes."
+  version: 1.0.0
+servers:
+- url: https://virtserver.swaggerhub.com/phantrunglam/AddressCode/1.0.0
+  description: SwaggerHub API Auto Mocking
+- url: /prod
+paths:
+  /countries:
+    get:
+      summary: Get a list of countries
+      description: Retrieve a list of countries with their ISO codes and names.
+      operationId: get_countries
+      responses:
+        "200":
+          description: A list of countries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country'
+        "500":
+          description: Internal Server Error. The server encountered an unexpected condition that prevented it from fulfilling the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /countries/{country_code}:
+    get:
+      summary: Get a country by ISO code
+      description: Retrieve a country with its ISO codes and name.
+      operationId: get_country_by_code
+      parameters:
+      - name: country_code
+        in: path
+        description: ISO 3166-1 alpha-3 code for the country
+        required: true
+        style: simple
+        explode: false
+        schema:
+          maxLength: 3
+          minLength: 3
+          type: string
+      responses:
+        "200":
+          description: A country
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Country'
+        "400":
+          description: Bad Request. The request was invalid or cannot be served.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found. The requested resource could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error. The server encountered an unexpected condition that prevented it from fulfilling the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /countries/{country_code}/divisions:
+    get:
+      summary: Get a list of divisions in a country
+      description: Retrieve a list of divisions in a country with their ISO codes and names.
+      operationId: get_divisions_by_country_code
+      parameters:
+      - name: country_code
+        in: path
+        description: ISO 3166-1 alpha-3 code for the country
+        required: true
+        style: simple
+        explode: false
+        schema:
+          maxLength: 3
+          minLength: 3
+          type: string
+      responses:
+        "200":
+          description: A list of divisions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Division'
+        "400":
+          description: Bad Request. The request was invalid or cannot be served.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found. The requested resource could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error. The server encountered an unexpected condition that prevented it from fulfilling the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /countries/{country_code}/divisions/{division_code}:
+    get:
+      summary: Get a division by ISO code in a country
+      description: Retrieve a division by ISO code in a country with its ISO codes and name.
+      operationId: get_division_by_code
+      parameters:
+      - name: country_code
+        in: path
+        description: ISO 3166-1 alpha-3 code for the country
+        required: true
+        style: simple
+        explode: false
+        schema:
+          maxLength: 3
+          minLength: 3
+          type: string
+      - name: division_code
+        in: path
+        description: Division code
+        required: true
+        style: simple
+        explode: false
+        schema:
+          minLength: 3
+          type: string
+          example: VN-HN
+      responses:
+        "200":
+          description: A division
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Division'
+        "400":
+          description: Bad Request. The request was invalid or cannot be served.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found. The requested resource could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error. The server encountered an unexpected condition that prevented it from fulfilling the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /countries/{country_code}/divisions/{division_code}/subdivisions:
+    get:
+      summary: Get all subdivisions of a division
+      operationId: get_subdivisions
+      parameters:
+      - name: country_code
+        in: path
+        description: Country Code (ISO3)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: division_code
+        in: path
+        description: Division Code
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: List of subdivisions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubDivision'
+        "400":
+          description: Bad Request. The request was invalid or cannot be served.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found. The requested resource could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error. The server encountered an unexpected condition that prevented it from fulfilling the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /countries/{country_code}/divisions/{division_code}/subdivisions/{subdiv_code}/l2subdivisions:
+    get:
+      summary: Get all l2subdivisions of a subdivision
+      operationId: get_l2subdivisions
+      parameters:
+      - name: country_code
+        in: path
+        description: Country Code (ISO3)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: division_code
+        in: path
+        description: Division Code
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: subdiv_code
+        in: path
+        description: SubDivision Code
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: List of l2subdivisions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/L2SubDivision'
+        "400":
+          description: Bad Request. The request was invalid or cannot be served.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not Found. The requested resource could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error. The server encountered an unexpected condition that prevented it from fulfilling the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Country:
+      type: object
+      properties:
+        iso3:
+          maxLength: 3
+          minLength: 3
+          type: string
+          description: ISO-3166-1 alpha-3
+          example: VNM
+        iso2:
+          maxLength: 2
+          minLength: 2
+          type: string
+          description: ISO-3166-1 alpha-2
+          example: VN
+        country_name:
+          type: string
+          example: Việt Nam
+    Division:
+      type: object
+      properties:
+        iso3:
+          type: string
+          example: VNM
+        country_id:
+          type: number
+          example: 232
+        division_code:
+          type: string
+          example: "VN-HN, VN-63 (An Giang)"
+        division_name:
+          type: string
+          example: TP. Hà nội
+        division_type:
+          type: string
+          example: TP.TW / Tỉnh
+    SubDivision:
+      type: object
+      properties:
+        iso3:
+          maxLength: 3
+          minLength: 3
+          type: string
+          example: VNM
+        division_code:
+          type: string
+          example: VN-HN
+        subdivision_code:
+          type: string
+          example: "18"
+        subdivision_name:
+          type: string
+          example: Quận Ba Đình
+        subdivision_type:
+          type: string
+          example: HU / QU /TT / Tp
+    L2SubDivision:
+      type: object
+      properties:
+        iso3:
+          maxLength: 3
+          minLength: 3
+          type: string
+          example: VNM
+        division_code:
+          type: string
+          example: VN-HN
+        subdivision_code:
+          type: string
+          example: "18"
+        l2suvdiv_code:
+          type: string
+        l2subdivision_name:
+          type: string
+          example: Phường Đội Cấn
+        subdivision_type:
+          type: string
+          example: PH / XA
+    Error:
+      required:
+      - code
+      - message
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Bad Request
+        description:
+          type: string
+          example: The request was malformed or invalid
+  responses:
+    BadRequest:
+      description: Bad Request. The request was invalid or cannot be served.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not Found. The requested resource could not be found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServerError:
+      description: Internal Server Error. The server encountered an unexpected condition that prevented it from fulfilling the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

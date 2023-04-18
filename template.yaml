@@ -84,7 +84,18 @@ Resources:
             RestApiId: !Ref AddressCodeApi
             Path: /countries/{iso_code}/divisions
             Method: get
-
+        SubDivisionList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AddressCodeApi
+            Path: /countries/{iso_code}/divisions/{division_code}/subdivisions
+            Method: get
+        L2SubDivisionList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AddressCodeApi
+            Path: /countries/{iso_code}/divisions/{division_code}/subdivisions/{subdiv_code}/l2subdivisions
+            Method: get
 
 Outputs:
   AddressApi:
