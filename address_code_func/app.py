@@ -71,7 +71,7 @@ finally:
     # print(dbcur)
 
 
-def toCountryObj(arr):
+def toCodeNameObj(arr):
     return {
         "code": arr[0],
         "name": arr[1]
@@ -117,7 +117,7 @@ def lambda_handler(event, context):
     try:
         requestId = ''
         if type(event['requestContext']) is dict:
-            requestId = event['requestContext']['requestId'];
+            requestId = event['requestContext']['requestId']
             print("requestId = " + requestId)
             params = (requestId, json.dumps(event['requestContext']), event['body'])
             cur.execute(
@@ -149,23 +149,27 @@ def lambda_handler(event, context):
             headers = {
                 "X-Count": str(total)
             }
-
+        # fixed CORS
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json"
+        }
         if resource_str == '/countries' and method == 'GET':
-            cur.execute("SELECT iso3 AS code, nicename AS name FROM sys_country ORDER BY iso3")
+            row_cnt = cur.execute("SELECT iso3 AS code, nicename AS name FROM sys_country ORDER BY iso3")
+            data = json.dumps(list(map(toCodeNameObj, cur.fetchall())))
             return {
                 "statusCode": 200,
                 "headers": headers,
-                "body": json.dumps(list(map(toCountryObj, cur.fetchall()))),
+                "body": data,
             }
         elif resource_str == '/countries/{iso_code}' and method == 'GET':
             iso_code = event['pathParameters']['iso_code']
             params = (iso_code,)
-            cur.execute("SELECT iso3, nicename FROM sys_country WHERE iso3 = ?", params)
+            row_cnt = cur.execute("SELECT iso3, nicename FROM sys_country WHERE iso3 = ?", params)
 
             #  Bug_1 - FIXed - use fetchall() instead of fetchone()
 
-            row = cur.fetchone()
-            if row is None:
+            if row_cnt == 0:
                 return {
                     "statusCode": 404,
                     "headers": headers,
@@ -173,36 +177,48 @@ def lambda_handler(event, context):
                         "message": "object not found, iso_code=" + iso_code,
                     }),
                 }
-
+            data = json.dumps(list(map(toCodeNameObj, cur.fetcone())))
             return {
                 "statusCode": 200,
                 "headers": headers,
-                "body": json.dumps(toCountryObj(row)),
+                "body": data,
             }
         # API entry /countries/{country-iso3}/divisions
         elif resource_str == '/countries/{iso_code}/divisions' and method == 'GET':
             iso_code = event['pathParameters']['iso_code']
             params = (iso_code,)
-            cur.execute("SELECT a.division_cd, a.division_name \
+            row_cnt = cur.execute("SELECT a.division_cd, a.division_name \
                 FROM sys_division a, sys_country b \
                 WHERE a.countryid = b.countryid \
                 AND b.iso3 = ?", params)
 
-            rows = cur.fetchall()
-            if rows is None:
-                return {
-                    "statusCode": 404,
-                    "headers": headers,
-                    "body": json.dumps({
-                        "message": "There are no divivisons under country with iso_code=" + iso_code,
-                    }),
-                }
+            # if row_cnt == 0:
+            #     return {
+            #         "statusCode": 404,
+            #         "headers": headers,
+            #         "body": json.dumps({
+            #             "message": "There are no divivisons under country with iso_code=" + iso_code,
+            #         }),
+            #     }
+            # data = json.dumps(list(map(toCodeNameObj, cur.fetchall())), ensure_ascii=False)
+            # return {
+            #     "statusCode": 200,
+            #     "headers": headers,
+            #     "body": data,
+            # }
+
+            data = [toCodeNameObj(row) for row in cur.fetchall()]
+            status_code = 200 if data else 404
 
             return {
-                "statusCode": 200,
+                "statusCode": status_code,
                 "headers": headers,
-                "body": json.dumps(list(map(toCountryObj, rows)), ensure_ascii=False),
+                "body": json.dumps({
+                    "message": "There are no divivisons under country with iso_code=" + iso_code,
+                }) if not data else json.dumps(data, ensure_ascii=False),
             }
+
+
         # API entry
         # summary: Get all subdivisions of a division
         # operationId: get_subdivisions
@@ -219,10 +235,10 @@ def lambda_handler(event, context):
                   and a.subdiv_cd != '000' and a.l2subdiv_cd is null \
                   and c.iso3 = ? and b.division_cd = ? \
                   order by a.subdiv_name"
-            cur.execute(sqlstatement, params)
+            row_cnt = cur.execute(sqlstatement, params)
             # Bug_1 FIXED
-            rows = cur.fetchall()
-            if rows is None:
+            # rows = cur.fetchall()
+            if row_cnt == 0:
                 return {
                     "statusCode": 404,
                     "headers": headers,
@@ -230,12 +246,13 @@ def lambda_handler(event, context):
                         "message": "object not found for iso_code=" + iso_code + " and division_code " + division_code,
                     }),
                 }
-
+            data = json.dumps(list(map(toCodeNameObj, cur.fetchall())), ensure_ascii=False)
             return {
                 "statusCode": 200,
                 "headers": headers,
-                "body": json.dumps(list(map(toCountryObj, rows)), ensure_ascii=False),
+                "body": data,
             }
+
         # API entry
         # summary: Get all l2subdivisions of a subdivision
         # operationId: get_l2subdivisions
@@ -257,22 +274,22 @@ def lambda_handler(event, context):
                   and a.subdiv_cd = b.subdiv_cd \
                   and d.iso3 = ? and c.division_cd = ? and b.subdiv_cd = ? \
                   order by a.subdiv_name"
-            cur.execute(sqlstatement, params)
+            row_cnt = cur.execute(sqlstatement, params)
             # Bug-1 FiXED
-            rows = cur.fetchall()
-            if rows is None:
+            # row = cur.fetchall()
+            if row_cnt == 0:
                 return {
                     "statusCode": 404,
                     "headers": headers,
                     "body": json.dumps({
-                        "message": "object not found for iso_code=" + iso_code + ",division_code=" + division_code + "and subdiv_code=" +subdiv_code,
+                        "message": "object not found for iso_code=" + iso_code + ",division_code=" + division_code + "and subdiv_code=" + subdiv_code,
                     }),
                 }
-
+            data = json.dumps(list(map(toCodeNameObj, cur.fetchall())), ensure_ascii=False)
             return {
                 "statusCode": 200,
                 "headers": headers,
-                "body": json.dumps(list(map(toCountryObj, rows)), ensure_ascii=False),
+                "body": data,
             }
 
         # API entry
@@ -291,10 +308,8 @@ def lambda_handler(event, context):
                   and a.subdiv_cd != '000' and a.l2subdiv_cd is null \
                   and c.iso3 = ? and b.division_cd = ? \
                   order by a.subdiv_name"
-            cur.execute(sqlstatement, params)
-
-            rows = cur.fetchall()
-            if rows is None:
+            row_cnt = cur.execute(sqlstatement, params)
+            if row_cnt == 0:
                 return {
                     "statusCode": 404,
                     "headers": headers,
@@ -302,11 +317,11 @@ def lambda_handler(event, context):
                         "message": "object not found for iso_code=" + iso_code + " and division_code " + division_code,
                     }),
                 }
-
+            data = json.dumps(list(map(toCodeNameObj, cur.fetchall())), ensure_ascii=False)
             return {
                 "statusCode": 200,
                 "headers": headers,
-                "body": json.dumps(list(map(toCountryObj, rows)), ensure_ascii=False),
+                "body": data,
             }
 
         # API entry
@@ -331,22 +346,22 @@ def lambda_handler(event, context):
                   and d.iso3 = ? and c.division_cd = ? and b.subdiv_cd = ? \
                   order by a.subdiv_name"
 
-            cur.execute(sqlstatement, params)
+            row_cnt = cur.execute(sqlstatement, params)
             # bug_1 fixed
-            rows = cur.fetchall()
-            if rows is None:
+
+            if row_cnt == 0:
                 return {
                     "statusCode": 404,
                     "headers": headers,
                     "body": json.dumps({
-                        "message": "object not found for iso_code=" + iso_code + ",division_code=" + division_code + "and subdiv_code=" +subdiv_code,
+                        "message": "object not found for iso_code=" + iso_code + ",division_code=" + division_code + "and subdiv_code=" + subdiv_code,
                     }),
                 }
-
+            data = json.dumps(list(map(toCodeNameObj, cur.fetchall())), ensure_ascii=False)
             return {
                 "statusCode": 200,
                 "headers": headers,
-                "body": json.dumps(list(map(toCountryObj, rows)), ensure_ascii=False),
+                "body": data,
             }
 
     except Exception as err:
