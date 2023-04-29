@@ -121,7 +121,7 @@ jobs:
           API_URL=https://${API_HOST}.execute-api.${TESTING_REGION}.amazonaws.com/${API_STAGE}
           sed 's|{API_URL}|'$API_URL'|g' s3-bucket/index.html > demo.html
           aws s3 cp demo.html s3://${TESTING_S3_BUCKET}/${FEATURE_STACK_NAME}.html
-          aws s3api put-object-acl --bucket ${TESTING_S3_BUCKET} --key ${TESTING_S3_BUCKET} --acl public-read
+          aws s3api put-object-acl --bucket ${TESTING_S3_BUCKET} --key ${FEATURE_STACK_NAME}.html --acl public-read
 
   build-and-deploy-bug:
     if: startsWith(github.ref, 'refs/heads/bug')
