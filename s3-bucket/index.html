@@ -84,6 +84,10 @@
               return resp.json();
             })
             .then(function(divisions) {
+              var elm1 = document.getElementById('subDivSelect');
+              elm1.length = 0;
+              var elm2 = document.getElementById('l2SubDivSelect');
+              elm2.length = 0;
               var elm = document.getElementById('divisionSelect');
               elm.length = 0;
               var def = document.createElement('option');
@@ -115,6 +119,8 @@
               return resp.json();
             })
             .then(function(subdivisions) {
+              var elm2 = document.getElementById('l2SubDivSelect');
+              elm2.length = 0;
               var elm = document.getElementById('subDivSelect');
               elm.length = 0;
               var def = document.createElement('option');
