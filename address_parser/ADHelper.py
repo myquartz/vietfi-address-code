@@ -104,7 +104,7 @@ class ADH:
     def __init__(self):
         # Load the parameters from the YAML file
         print("__init__ ADH")
-        with open("../parameters.yaml", "r") as f:
+        with open("./parameters.yaml", "r") as f:
             self.params = yaml.safe_load(f)
 
         logfile = self.params["logs"]["path"]
@@ -173,7 +173,7 @@ class ADH:
         if self.special_loaded:
             return
         try:
-            sql = "Select divisionid, division_name From sys_division WHERE division_name LIKE '%-%'"
+            sql = "Select divisionid, division_name From sys_division WHERE division_name LIKE '%-%' ORDER BY division_name"
             cur = self.conn.cursor()
             cur.execute(sql)
             for row in cur.fetchall():
@@ -199,7 +199,7 @@ class ADH:
 
         # load special divison_sub
         try:
-            sql = "Select subdivid, subdiv_name  From sys_division_sub Where subdiv_name Like '%-%'"
+            sql = "Select subdivid, subdiv_name  From sys_division_sub Where subdiv_name Like '%-%' ORDER BY subdiv_name"
             cur = self.conn.cursor()
             cur.execute(sql)
             for row in cur.fetchall():

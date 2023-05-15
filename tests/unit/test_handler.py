@@ -1,21 +1,23 @@
 import json
+import os
+os.environ["DB_DIR"] = "./s3-bucket"
 
 import pytest
 
-from sqlite3_func import app
+from address_code_func import app
 
 @pytest.fixture()
 def apigw_event():
     """ Generates API GW Event"""
 
     return {
-        "body": '{ "test": "body"}',
-        "resource": "/{proxy+}",
+        "body": '',
+        "resource": "/countries",
         "requestContext": {
             "resourceId": "123456",
             "apiId": "1234567890",
-            "resourcePath": "/{proxy+}",
-            "httpMethod": "POST",
+            "resourcePath": "/countries",
+            "httpMethod": "GET",
             "requestId": "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",
             "accountId": "123456789012",
             "identity": {
@@ -33,7 +35,7 @@ def apigw_event():
             },
             "stage": "prod",
         },
-        "queryStringParameters": {"foo": "bar"},
+        "queryStringParameters": {},
         "headers": {
             "Via": "1.1 08f323deadbeefa7af34d5feb414ce27.cloudfront.net (CloudFront)",
             "Accept-Language": "en-US,en;q=0.8",
@@ -54,10 +56,10 @@ def apigw_event():
             "CloudFront-Forwarded-Proto": "https",
             "Accept-Encoding": "gzip, deflate, sdch",
         },
-        "pathParameters": {"proxy": "/examplepath"},
-        "httpMethod": "POST",
+        "pathParameters": {},
+        "httpMethod": "GET",
         "stageVariables": {"baz": "qux"},
-        "path": "/examplepath",
+        "path": "/countries",
     }
 
 
@@ -67,5 +69,4 @@ def test_lambda_handler(apigw_event):
     data = json.loads(ret["body"])
     print(ret)
     assert ret["statusCode"] == 200
-    assert "message" in ret["body"]
-    assert "count" in data["message"]
+    assert "code" in ret["body"]

@@ -28,7 +28,7 @@ Refer to https://brianpfeil.com/post/aws-sam-local-invoke-with-lambda-role/
 
 '''
 
-DB_DIR = '/tmp'
+DB_DIR = os.getenv('DB_DIR','/tmp')
 
 bucketName = os.getenv('BUCKET_NAME')
 objectName = os.getenv('DB_FILE_KEY', 'country_div_sub.sqlite3')
