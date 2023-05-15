@@ -198,68 +198,68 @@ class ADH:
         self.special_division = special_division
 
         # load special divison_sub
-        # try:
-        #     sql = "Select subdivid, subdiv_name  From sys_division_sub Where subdiv_name Like '%-%'"
-        #     cur = self.conn.cursor()
-        #     cur.execute(sql)
-        #     for row in cur.fetchall():
-        #         division_sub_id = row[0]
-        #         division_sub_name = unicodedata.normalize('NFD', row[1]).replace('-', ' ').lower()
-        #         division_sub_name = re.sub(r'\s+', ' ', division_sub_name)
-        #
-        #         special_division_sub_div[division_sub_name] = division_sub_id
-        #
-        #         if self.NORM_QUAN in division_sub_name:
-        #             special_division_sub_div[
-        #                 division_sub_name.replace(self.NORM_QUAN, '').strip()] = division_sub_id
-        #         elif self.NORM_HUYEN in division_sub_name:
-        #             special_division_sub_div[
-        #                 division_sub_name.replace(self.NORM_HUYEN, '').strip()] = division_sub_id
-        #         elif self.NORM_TX in division_sub_name:
-        #             special_division_sub_div[
-        #                 division_sub_name.replace(self.NORM_TX, '').strip()] = division_sub_id
-        #         elif self.NORM_THANHPHO in division_sub_name:
-        #             special_division_sub_div[
-        #                 division_sub_name.replace(self.NORM_THANHPHO, '').strip()] = division_sub_id
-        #         elif self.NORM_PHUONG in division_sub_name:
-        #             special_division_sub_div[
-        #                 division_sub_name.replace(self.NORM_PHUONG, '').strip()] = division_sub_id
-        #         elif self.NORM_XA in division_sub_name:
-        #             special_division_sub_div[
-        #                 division_sub_name.replace(self.NORM_XA, '').strip()] = division_sub_id
-        #         elif self.NORM_TT in division_sub_name:
-        #             special_division_sub_div[
-        #                 division_sub_name.replace(self.NORM_TT, '').strip()] = division_sub_id
-        #
-        # except Exception as e:
-        #     raise RuntimeError(e)
-        #     sys.exit(1)
+        try:
+            sql = "Select subdivid, subdiv_name  From sys_division_sub Where subdiv_name Like '%-%'"
+            cur = self.conn.cursor()
+            cur.execute(sql)
+            for row in cur.fetchall():
+                division_sub_id = row[0]
+                division_sub_name = unicodedata.normalize('NFD', row[1]).replace('-', ' ').lower()
+                division_sub_name = re.sub(r'\s+', ' ', division_sub_name)
+
+                special_division_sub_div[division_sub_name] = division_sub_id
+
+                if self.NORM_QUAN in division_sub_name:
+                    special_division_sub_div[
+                        division_sub_name.replace(self.NORM_QUAN, '').strip()] = division_sub_id
+                elif self.NORM_HUYEN in division_sub_name:
+                    special_division_sub_div[
+                        division_sub_name.replace(self.NORM_HUYEN, '').strip()] = division_sub_id
+                elif self.NORM_TX in division_sub_name:
+                    special_division_sub_div[
+                        division_sub_name.replace(self.NORM_TX, '').strip()] = division_sub_id
+                elif self.NORM_THANHPHO in division_sub_name:
+                    special_division_sub_div[
+                        division_sub_name.replace(self.NORM_THANHPHO, '').strip()] = division_sub_id
+                elif self.NORM_PHUONG in division_sub_name:
+                    special_division_sub_div[
+                        division_sub_name.replace(self.NORM_PHUONG, '').strip()] = division_sub_id
+                elif self.NORM_XA in division_sub_name:
+                    special_division_sub_div[
+                        division_sub_name.replace(self.NORM_XA, '').strip()] = division_sub_id
+                elif self.NORM_TT in division_sub_name:
+                    special_division_sub_div[
+                        division_sub_name.replace(self.NORM_TT, '').strip()] = division_sub_id
+
+        except Exception as e:
+            raise RuntimeError(e)
+            sys.exit(1)
         # finally:
         #     if cur is not None:
         #         cur.close()
         # self.special_division_sub_div = special_division_sub_div
 
         # re-organized code
-        prefixes = [self.NORM_QUAN, self.NORM_HUYEN, self.NORM_TX, self.NORM_THANHPHO,
-                    self.NORM_PHUONG, self.NORM_XA, self.NORM_TT]
-        try:
-            sql = "SELECT subdivid, subdiv_name FROM sys_division_sub WHERE subdiv_name LIKE '%-%'"
-            cur = self.conn.cursor()
-            cur.execute(sql)
-
-            for row in cur.fetchall():
-                division_sub_id = row[0]
-                division_sub_name = unicodedata.normalize('NFD', row[1]).replace('-', ' ').lower()
-                division_sub_name = re.sub(r'\s+', ' ', division_sub_name)
-
-                for prefix in prefixes:
-                    if prefix in division_sub_name:
-                        normalized_name = division_sub_name.replace(prefix, '').strip()
-                        special_division_sub_div[normalized_name] = division_sub_id
-
-        except Exception as e:
-            raise RuntimeError(e)
-            sys.exit(1)
+        # prefixes = [self.NORM_QUAN, self.NORM_HUYEN, self.NORM_TX, self.NORM_THANHPHO,
+        #             self.NORM_PHUONG, self.NORM_XA, self.NORM_TT]
+        # try:
+        #     sql = "SELECT subdivid, subdiv_name FROM sys_division_sub WHERE subdiv_name LIKE '%-%'"
+        #     cur = self.conn.cursor()
+        #     cur.execute(sql)
+        #
+        #     for row in cur.fetchall():
+        #         division_sub_id = row[0]
+        #         division_sub_name = unicodedata.normalize('NFD', row[1]).replace('-', ' ').lower()
+        #         division_sub_name = re.sub(r'\s+', ' ', division_sub_name)
+        #
+        #         for prefix in prefixes:
+        #             if prefix in division_sub_name:
+        #                 normalized_name = division_sub_name.replace(prefix, '').strip()
+        #                 special_division_sub_div[normalized_name] = division_sub_id
+        #
+        # except Exception as e:
+        #     raise RuntimeError(e)
+        #     sys.exit(1)
 
         # return results
         if self.special_division:
