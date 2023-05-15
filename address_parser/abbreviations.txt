@@ -1,0 +1,13 @@
+{
+'AG':'Tỉnh An Giang'
+'BV':'Tỉnh Bà Rịa - Vũng Tàu'
+'BD':'Tỉnh Bình Dương'
+'BP':'Tỉnh Bình Phước'
+'BTh':'Tỉnh Bình Thuận'
+'BĐ':'Tỉnh Bình Định'
+'BL':'Tỉnh Bạc Liêu'
+'BG':'Tỉnh Bắc Giang'
+'BK':'Tỉnh Bắc Kạn'
+'BN':'Tỉnh Bắc Ninh'
+'BT':'Tỉnh Bến Tre'
+}

@@ -46,7 +46,7 @@ if client is not None and bucketName is not None and not os.path.exists(DB_DIR +
             pass
 
 # CORS config
-corsAllow = os.getenv('CORS_ALLOW_ORIGIN', '')
+corsAllow = os.getenv('CORS_ALLOW_ORIGIN', '*')
 
 # Global DB Connection
 # dbcon = sqlite3.connect(DB_DIR + "/" + objectName)
@@ -246,10 +246,10 @@ def lambda_handler(event, context):
                 "X-Count": str(total)
             }
         # fixed CORS
-        headers = {
-            "Access-Control-Allow-Origin": "*",
-            "Content-Type": "application/json"
-        }
+        # headers = {
+        #     "Access-Control-Allow-Origin": "*",
+        #     "Content-Type": "application/json"
+        # }
 
         if resource in api_routes:
             route = api_routes[resource]
