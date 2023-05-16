@@ -281,9 +281,10 @@ class AP:
         tempStr = ""
 
         # Step main loop thru the array
-        k = array_len
-        for k in range(len(array) - 1, -1, -1):
-            tempStr = array[k].strip()
+        # k = array_len
+        # for k in range(len(array) - 1, -1, -1):
+        for tempStr in reversed(array):
+            tempStr = tempStr.strip()
             # print(k, tempStr)
             # detect division
             if division_id == 0:

@@ -268,6 +268,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /address:
+    post:
+      summary: Retrieve Address Details
+      description: Retrieves detailed address information based on input text
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: addressInput
+          description: Address text input
+          schema:
+            type: object
+            properties:
+              address_text:
+                type: string
+                example: "Số 18/25 Nguyễn Văn Cừ, Gia Thuỵ, Long Biên, Hà nội"
+                minLength: 1
+                maxLength: 256
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/components/schemas/AddressCode"
+        400:
+          description: Invalid input
 components:
   schemas:
     Country:
@@ -348,6 +375,35 @@ components:
         subdivision_type:
           type: string
           example: PH / XA
+    AddressCode:
+      type: object
+      properties:
+        country_code:
+          maxLength: 3
+          minLength: 3
+          type: string
+          example: VNM
+        division_name:
+          type: string
+          example: Thành phố Hà nội
+        division_code:
+          type: string
+          example: VN-HN
+        subdivision_name:
+          type: string
+          example: "Quận Long Biên"
+        subdivision_code:
+          type: string
+          example: "004"
+        l2subdivision_name:
+          type: string
+          example: Phường Gia Thuỵ
+        l2suvdiv_code:
+          type: string
+          example: "00130"
+        address_line:
+          type: string
+          example: "Số 18/25 Nguyễn Văn Cừ"
     Error:
       required:
       - code
