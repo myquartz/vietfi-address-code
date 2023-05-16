@@ -1,7 +1,7 @@
 database:
-  path:   ../db/address_db.sqlite3
+  path:   ./s3-bucket/country_div_sub.sqlite3
   driver: sqlite3
   timeout: 10000
 logs:
-  path: ../logs/addressparser.log
+  path: ./addressparser.log
 

@@ -2,41 +2,39 @@ import re
 from typing import Union
 from address_parser.ADHelper import ADH
 
+# result set of the address parser
+data0 = {
+    "country_code": "VNM",
+    "division_name": "",
+    "division_code": "",
+    "division_id": 0,
+    "subdiv_code": "",
+    "subdiv_name": "",
+    "l2subdiv_code": "",
+    "l2subdiv_name": "",
+    "address_line": "",
+}
+
 
 class AP:
     # data structure of normalized address
-    # result set of the address parser
-    data0 = {
-        "country_code": "VNM",
-        "division_name": "",
-        "division_code": "",
-        "division_id": 0,
-        "subdiv_code": "",
-        "subdiv_name": "",
-        "l2subdiv_code": "",
-        "l2subdiv_name": "",
-        "address_line": "",
-    }
-    data = data0
-    space_location = 0
+    def __init__(self, init_conn=None):
+        global data0
+        # Init AddressDictionary if not done yet.
+        self.adh = ADH(init_conn)
 
-    # Init AddressDictionary if not done yet.
-    adh = ADH()
+        self.data = data0
+        self.space_location = 0
+        if self.adh.conn is not None:
+            self.conn = self.adh.conn
+        else:
+            self.conn = self.adh.connect_database(self.adh.params)
 
     # adh.load_special_mapping()
     def reset_data(self):
-        self.data0 = {
-            "country_code": "VNM",
-            "division_name": "",
-            "division_code": "",
-            "division_id": 0,
-            "subdiv_code": "",
-            "subdiv_name": "",
-            "l2subdiv_code": "",
-            "l2subdiv_name": "",
-            "address_line": "",
-        }
-        self.data = self.data0
+        global data0
+        self.data = data0
+        self.space_location = 0
         return self.data
 
     @staticmethod
@@ -46,24 +44,18 @@ class AP:
 
     def detect_division(self, temp_str):
         """ Detect division component from an address text """
-        if self.adh.conn is not None:
-            conn = self.adh.conn
-            cur = conn.cursor()
-        else:
-            conn, cur = self.adh.connect_database(self.adh.params)
-
+        cur = self.conn.cursor()
         division_id = 0
         data = self.data
         data["country_code"] = "VNM"
 
-        space_location = AP.space_location
         match_one = False
         special_division = self.adh.special_division
 
-        while temp_str and space_location >= 0 and not division_id:
-            temp_location = space_location
+        while temp_str and self.space_location >= 0 and not division_id:
+            temp_location = self.space_location
             match_one = False
-            word_check = temp_str[temp_location:].strip().lower() if space_location > 0 else temp_str.lower()
+            word_check = temp_str[temp_location:].strip().lower() if self.space_location > 0 else temp_str.lower()
             # print("1. word_check:" + word_check)
             if division_id == 0:
                 if word_check in special_division:
@@ -114,25 +106,18 @@ class AP:
 
     def detect_subdiv(self, temp_str):
         # print("2. testing detect_subdiv")
-        # conn, cur = ADH.connect_database(adh.params)
-        if self.adh.conn is not None:
-            conn = self.adh.conn
-            cur = conn.cursor()
-        else:
-            conn, cur = self.adh.connect_database(self.adh.params)
+        cur = self.conn.cursor()
 
         special_division_sub_div = self.adh.special_division_sub_div
 
         data = self.data
-        division_code = data["division_code"]
         division_id = data["division_id"]
         subdiv_code = data["subdiv_code"]
 
-        space_location = 0
         temp_location = 0
         match_one = False
 
-        word_check = temp_str[temp_location:].strip().lower() if space_location > 0 else temp_str.lower()
+        word_check = temp_str[temp_location:].strip().lower() if self.space_location > 0 else temp_str.lower()
 
         if word_check and not subdiv_code and (division_id > 0):
             if word_check in special_division_sub_div:
@@ -183,31 +168,25 @@ class AP:
                     print("not found search result ")
                     print(row)
 
+        self.space_location = temp_location
         return data
 
     # #3: detecting l2subdiv
     def detect_l2subdiv(self, temp_str):
 
-        if self.adh.conn is not None:
-            conn = self.adh.conn
-            cur = conn.cursor()
-        else:
-            conn, cur = self.adh.connect_database(self.adh.params)
+        cur = self.conn.cursor()
 
         special_division_sub_div = self.adh.special_division_sub_div
 
         data: dict[str, Union[str, int]] = self.data
-        division_code = data["division_code"]
         division_id = data["division_id"]
         subdiv_code = data["subdiv_code"]
-        subdiv_name = data["subdiv_name"]
         l2subdiv_code = data["l2subdiv_code"]
 
-        space_location = 0
         temp_location = 0
         match_one = False
 
-        word_check = temp_str[temp_location:].strip().lower() if space_location > 0 else temp_str.lower()
+        word_check = temp_str[temp_location:].strip().lower() if self.space_location > 0 else temp_str.lower()
 
         if word_check and not l2subdiv_code \
                 and subdiv_code and (division_id > 0):
@@ -262,7 +241,7 @@ class AP:
             return data
 
     def detect_address(self, address_text: str):
-
+        global data0
         # detect address codes from address_text
         # Step 1: normalize address_text
         # Step 2: split address text into words
@@ -272,7 +251,6 @@ class AP:
         AP.reset_data(AP)  # reset data record
         data: dict[str, Union[str, int]] = self.data
 
-        AP.data = AP.data0
         data["address_line"] = array[0]
 
         division_id = 0

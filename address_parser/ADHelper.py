@@ -18,18 +18,19 @@ class CustomLogger(logging.Logger):
     def __init__(self, name, level=logging.DEBUG):
         super().__init__(name, level)
 
-        # Create a handler that will write to a log file
-        # file_name = logging.getLogger()
-        file_handler = logging.FileHandler(name)  #
-        file_handler.setLevel(level)
+        if name is not None:
+            # Create a handler that will write to a log file
+            # file_name = logging.getLogger()
+            file_handler = logging.FileHandler(name)  #
+            file_handler.setLevel(level)
 
-        # Create a formatter that will format the log messages
-        formatter = logging.Formatter(
-            '{"asctime": "%(asctime)s", "name": "%(name)s", "level": "%(levelname)s", "message": %(message)s},')
-        file_handler.setFormatter(formatter)
+            # Create a formatter that will format the log messages
+            formatter = logging.Formatter(
+                '{"asctime": "%(asctime)s", "name": "%(name)s", "level": "%(levelname)s", "message": %(message)s},')
+            file_handler.setFormatter(formatter)
 
-        # Add the handler to the logger
-        self.addHandler(file_handler)
+            # Add the handler to the logger
+            self.addHandler(file_handler)
 
         # Create a stream handler for console output (stdout)
         stream_handler = logging.StreamHandler(sys.stdout)
@@ -101,21 +102,25 @@ class ADH:
     special_division_sub_div: Dict[str, int] = {}
     special_loaded = False
 
-    def __init__(self):
-        # Load the parameters from the YAML file
-        print("__init__ ADH")
-        with open("../parameters.yaml", "r") as f:
-            self.params = yaml.safe_load(f)
+    def __init__(self, init_conn=None):
+        
+        if init_conn is None:
+            # Load the parameters from the YAML file
+            print("__init__ ADH")
+            with open("./parameters.yaml", "r") as f:
+                self.params = yaml.safe_load(f)
 
-        logfile = self.params["logs"]["path"]
-        self.plogger = CustomLogger(logfile)
-        if self.plogger is None:
-            print("Something wrong!")
-            exit(98)
+            logfile = self.params["logs"]["path"]
+            self.plogger = CustomLogger(logfile)
+            if self.plogger is None:
+                print("Something wrong!")
+                exit(98)
+        else:
+            self.plogger = CustomLogger()
 
         self.plogger.info("Starting new address parsing session")
 
-        self.conn, self.cur = self.connect_database(self.params)
+        self.conn = self.connect_database(self.params)
 
         self.load_special_mapping()
 
@@ -129,10 +134,9 @@ class ADH:
         if os.path.isfile(dbfile):
             try:
                 conn = sqlite3.connect(dbfile)
-                cur = conn.cursor()
-                if conn and cur:
+                if conn:
                     # print("Database connection successful")
-                    return conn, cur
+                    return conn
                 else:
                     print("Failed to connect to database")
                     self.plogger.error("Failed to connect to database")
@@ -151,7 +155,7 @@ class ADH:
         else:
             self.plogger.error(dbfile + " does not exist!")
             sys.exit()
-        return conn, cur
+        return conn
 
     def get_extended_prefix(self, word_check):
         """extend prefix abbreviation into full prefix"""
@@ -173,7 +177,7 @@ class ADH:
         if self.special_loaded:
             return
         try:
-            sql = "Select divisionid, division_name From sys_division WHERE division_name LIKE '%-%'"
+            sql = "Select divisionid, division_name From sys_division WHERE division_name LIKE '%-%' ORDER BY division_name"
             cur = self.conn.cursor()
             cur.execute(sql)
             for row in cur.fetchall():
@@ -199,7 +203,7 @@ class ADH:
 
         # load special divison_sub
         try:
-            sql = "Select subdivid, subdiv_name  From sys_division_sub Where subdiv_name Like '%-%'"
+            sql = "Select subdivid, subdiv_name  From sys_division_sub Where subdiv_name Like '%-%' ORDER BY subdiv_name"
             cur = self.conn.cursor()
             cur.execute(sql)
             for row in cur.fetchall():
