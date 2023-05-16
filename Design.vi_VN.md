@@ -66,3 +66,36 @@ Trong đó:
 1. AWS Lambda Function: phải có vùng lưu tạm /tmp (ephemerral storage). Kích thước mặc định và miễn phí là 512MB.
 2. Tại quá trình Cold Start, thì data file sẽ được tải từ AWS S3 về.
 3. Phần handler xử lý chính sẽ mở db file và thực hiện truy vấn, trả dữ liệu về như các ứng dụng bình thường.
+
+## Tính năng phân tích địa chỉ
+
+Ngoài việc liệt kê, lựa chọn địa chỉ, thì Address Code bổ sung tính năng phân tích từ 1 dòng địa chỉ thành mã tỉnh/thành phô, quận/huyện, phường/xã...
+
+Ví dụ như sau:
+
+1. "Số 18/564/55/14\nNguyễn Văn Cừ, Gia Thụy, Long Biên, Hà Nội" thành VNM, 01 (Hà Nội), 004 (Long Biên), 
+
+Thiết kế lưu đồ sau đây là giải thuậti (áp dụng tìm kiếm cho 1 thành tố division):
+
+
+```mermaid
+flowchart TD
+    S([Start]) --> |address line| L
+    L[Split by comma] --> |elements| A
+    A(Each reversed) -->|last element| B[Search from variants]
+    B --> C{{Result Condition}}
+    C -->|None - single word| E([Return not found])
+    C -->|None - multi words| F[Split by space]
+    C -->|Match one| D[Save division]
+    F --> |words| G(words combination)
+    G --> |new elements| H(extend to elements)
+    H --> |Loop| A
+    D --> A
+```
+
+Trong đó:
+
+1. Split by comma: Tách dòng thành các đoạn cách nhau bởi dấu phảy hoặc dấu trừ.
+2. Search from variants: các đoạn - ngoài bản gốc - được ghép thêm chuỗi đầu ngữ như "Tỉnh", "Thành Phố", "TP." ... thành variants, để tìm kiếm tên trong CSDL.
+3. Split by space & words combination: nếu đoạn không tìm thấy và đoạn có nhiều từ (cách nhau bởi space/dấu xuống dòng) thì sẽ tách thành các từ, rồi trích 1 số từ, ghép nhiều từ lại và thêm đầu ngữ thành các variants, rồi tìm kiếm tương tự. Hành động này nhằm tìm kiếm thêm các tình huống không phân tách bởi dấu phảy, ví dụ viết "Long Biên\nHà Nội" thì vẫn tìm đúng.
+4. Save division và Return not found: là 2 điểm trả kết quả về, giả định thủ tục này chạy cho division.
