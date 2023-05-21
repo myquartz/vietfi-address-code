@@ -288,6 +288,12 @@ paths:
                 example: "Số 18/25 Nguyễn Văn Cừ, Gia Thuỵ, Long Biên, Hà nội"
                 minLength: 1
                 maxLength: 256
+              country_code:
+                type: string
+                description: "Country code, VMN by default"
+              fuzzy:
+                type: boolean
+                description: "turn on fuzzy detection"
       responses:
         200:
           description: Successful response
@@ -389,6 +395,10 @@ components:
         division_code:
           type: string
           example: VN-HN
+        division_gso:
+          type: string
+          example: 01
+          description: "Code by GSO standard"
         subdivision_name:
           type: string
           example: "Quận Long Biên"
