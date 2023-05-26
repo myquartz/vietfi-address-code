@@ -11,7 +11,7 @@ def test_load_special_mapping():
 
     # Assert that the expected result matches the actual result
     expected_params = {'database': {'path': './s3-bucket/country_div_sub.sqlite3', 'driver': 'sqlite3', 'timeout': 10000}}
-    expected_special_division = {'north east region': 67, 'tỉnh bà rịa vũng tàu': 2,
+    expected_special_division = {'tỉnh bà rịa vũng tàu': 2,
                                  'tỉnh thừa thiên huế': 50}
 
     expected_special_subdiv = {'thành phố phan rang tháp chàm': 10812}

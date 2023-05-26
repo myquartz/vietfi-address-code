@@ -1,8 +1,11 @@
 # Address Helper Classes
+"""
+  2023-05-18 ADH is now __init__ specifically by country_code
+"""
 import logging
 import os.path
 import sys
-import pathlib
+# import pathlib
 import sqlite3
 import json
 import yaml
@@ -10,11 +13,14 @@ import re
 from typing import Dict
 import unicodedata
 
+global APP_PATH
+APP_PATH = os.getcwd()
 
 class CustomLogger(logging.Logger):
     """
     Custom Logger supporting UTF8 and indented JSON format
     """
+
     def __init__(self, name, level=logging.DEBUG):
         super().__init__(name, level)
 
@@ -62,30 +68,33 @@ class ADH:
     2. Preloaded special addresses from sqlite3 db
     3. Parameters and Db connections
     """
-    # setup address prefix normalized constants
-    NORM_TP = "TP. ".lower()
-    NORM_TINH = "Tỉnh ".lower()
-    NORM_QUAN = "Quận ".lower()
-    NORM_HUYEN = "Huyện ".lower()
-    NORM_TX = "Thị xã ".lower()
-    NORM_THANHPHO = "Thành phố ".lower()
-    NORM_PHUONG = "Phường ".lower()
-    NORM_XA = "Xã ".lower()
-    NORM_TT = "Thị trấn ".lower()
+    # country specifics
+    country_code = None
+    # # setup address prefix normalized constants
+    # NORM_TP = "TP. ".lower()
+    # NORM_TINH = "Tỉnh ".lower()
+    # NORM_QUAN = "Quận ".lower()
+    # NORM_HUYEN = "Huyện ".lower()
+    # NORM_TX = "Thị xã ".lower()
+    # NORM_THANHPHO = "Thành phố ".lower()
+    # NORM_PHUONG = "Phường ".lower()
+    # NORM_XA = "Xã ".lower()
+    # NORM_TT = "Thị trấn ".lower()
+    #
+    # prefix_mapping = {
+    #     "tp.": NORM_TP,
+    #     "tp ": NORM_TP,
+    #     "tx.": NORM_TX,
+    #     "tt.": NORM_TT,
+    #     "tt ": NORM_TT,
+    #     "q.": NORM_QUAN,
+    #     "q ": NORM_QUAN,
+    #     "h.": NORM_HUYEN,
+    #     "p.": NORM_PHUONG,
+    #     "x.": NORM_XA
+    # }
 
-    prefix_mapping = {
-        "tp.": NORM_TP,
-        "tp ": NORM_TP,
-        "tx.": NORM_TX,
-        "tt.": NORM_TT,
-        "tt ": NORM_TT,
-        "q.": NORM_QUAN,
-        "q ": NORM_QUAN,
-        "h.": NORM_HUYEN,
-        "p.": NORM_PHUONG,
-        "x.": NORM_XA
-    }
-
+    pre_map = {}
     # address data structure
     data = {
         "country_code": "VNM",
@@ -102,15 +111,19 @@ class ADH:
     special_division_sub_div: Dict[str, int] = {}
     special_loaded = False
 
-    def __init__(self, init_conn=None):
-        
+    def __init__(self, init_conn=None, init_country="VNM"):
         if init_conn is None:
             # Load the parameters from the YAML file
-            print("__init__ ADH")
-            with open("./parameters.yaml", "r") as f:
-                self.params = yaml.safe_load(f)
-
-            logfile = self.params["logs"]["path"]
+            # change to absolute path
+            # current_path = os.path.abspath(__file__)
+            # script_directory = os.path.dirname(current_path)
+            # config_file_path = os.path.join(script_directory, "..", "parameters.yaml")
+            #
+            # with open(config_file_path, "r") as f:
+            #     self.params = yaml.safe_load(f)
+            #
+            # logfile = self.params["logs"]["path"]
+            logfile = os.getenv('LOG_DIR', '/tmp') + '/' + 'addressparser.log'
             self.plogger = CustomLogger(logfile)
             if self.plogger is None:
                 print("Something wrong!")
@@ -120,17 +133,26 @@ class ADH:
 
         self.plogger.info("Starting new address parsing session")
 
-        self.conn = self.connect_database(self.params)
+        self.conn = self.connect_database()
+        if init_country is not None:
+            self.country_code = init_country
+        else:
+            self.country_code = "VNM"
+
+        # creating dictionary of constants
+        self.load_prefix_mapping()
 
         self.load_special_mapping()
 
     # def __del__(self):
     #     self.conn.close()
 
-    def connect_database(self, params):
+    def connect_database(self):
         # Connect to the address database in sqlite3
 
-        dbfile = params["database"]["path"]
+        # dbfile = params["database"]["path"]
+        dbfile = os.getenv('DB_DIR', '/tmp') + '/' + 'address_db.sqlite3'
+
         if os.path.isfile(dbfile):
             try:
                 conn = sqlite3.connect(dbfile)
@@ -146,30 +168,50 @@ class ADH:
                 # print("Database connection error: ", e)
                 # self.plogger.logger.error("Failed to connect to database")
                 self.plogger.error("Database connection error: \n" + str(e))
-                # , extra={
-                #     "input_address": "none",
-                #     "parsed_address": "none",
-                #     "error_message": str(e)
-                # })
+
                 sys.exit()
         else:
             self.plogger.error(dbfile + " does not exist!")
             sys.exit()
         return conn
 
-    def get_extended_prefix(self, word_check):
-        """extend prefix abbreviation into full prefix"""
+    def load_prefix_mapping(self):
+        cur = self.conn.cursor()
+        sql = "select lower(prefix), lower(name), unit_level \
+               from sys_prefix \
+               where country_code = ?"
+        # print(self.country_code)
+        params = (self.country_code,)
+        cur.execute(sql, params)
+        rows = cur.fetchall()
+        # print(rows)
+        for row in rows:
+            # self.p_map[row[0]] = row[1]
+            self.pre_map[row[0], row[2]] = row[1]
 
-        if re.match(r"^[qQ]\d+.*", word_check):
-            return self.NORM_QUAN + word_check[1:].strip()
-        elif re.match(r"^[pP]\d+.*", word_check):
-            return self.NORM_PHUONG + word_check[1:].strip()
+        # print(self.p_map)
+        cur.close()
 
-        for prefix, normalized_prefix in self.prefix_mapping.items():
-            if word_check.lower().startswith(prefix):
-                return normalized_prefix + word_check[len(prefix):].strip()
+    def extend_prefix2fullname(self, word_check: str):
+        """ Extend address with prefix to full name """
+        word = word_check.lower().strip()
+        ext = [value + ' ' + word[len(key[0]):].strip() for key, value in self.pre_map.items() if word.startswith(key[0])]
+        fullname = ext[0] if ext else ""
+        return fullname
 
-        return None
+    # def extend_prefix_to_fullname(self, word_check):
+    #     """extend prefix abbreviation into full prefix"""
+    #
+    #     if re.match(r"^[qQ]\d+.*", word_check):
+    #         return self.NORM_QUAN + word_check[1:].strip()
+    #     elif re.match(r"^[pP]\d+.*", word_check):
+    #         return self.NORM_PHUONG + word_check[1:].strip()
+    #
+    #     for prefix, normalized_prefix in self.prefix_mapping.items():
+    #         if word_check.lower().startswith(prefix):
+    #             return normalized_prefix + word_check[len(prefix):].strip()
+    #
+    #     return None
 
     def load_special_mapping(self):
         special_division: Dict[str, int] = {}
@@ -177,7 +219,10 @@ class ADH:
         if self.special_loaded:
             return
         try:
-            sql = "Select divisionid, division_name From sys_division WHERE division_name LIKE '%-%' ORDER BY division_name"
+            sql = "Select divisionid, division_name \
+                From sys_division \
+                WHERE division_name LIKE '%-%' \
+                ORDER BY division_name"
             cur = self.conn.cursor()
             cur.execute(sql)
             for row in cur.fetchall():
@@ -186,11 +231,13 @@ class ADH:
                 division_name = re.sub(r'\s+', ' ', division_name)
 
                 special_division[division_name] = division_id
+                # 2023-05-24 changed
+                special_division[division_name] = division_id
 
-                if self.NORM_TINH in division_name:
-                    special_division[division_name.replace(self.NORM_TINH, '').strip()] = division_id
-                elif self.NORM_TP in division_name:
-                    special_division[division_name.replace(self.NORM_TP, '').strip()] = division_id
+                # if self.NORM_TINH in division_name:
+                #     special_division[division_name.replace(self.NORM_TINH, '').strip()] = division_id
+                # elif self.NORM_TP in division_name:
+                #     special_division[division_name.replace(self.NORM_TP, '').strip()] = division_id
 
         except Exception as e:
             self.plogger.logger.error(str(e) + "db error!")
@@ -203,7 +250,10 @@ class ADH:
 
         # load special divison_sub
         try:
-            sql = "Select subdivid, subdiv_name  From sys_division_sub Where subdiv_name Like '%-%' ORDER BY subdiv_name"
+            sql = "Select subdivid, subdiv_name  \
+            From sys_division_sub \
+            Where subdiv_name Like '%-%' \
+            ORDER BY subdiv_name"
             cur = self.conn.cursor()
             cur.execute(sql)
             for row in cur.fetchall():
@@ -213,27 +263,27 @@ class ADH:
 
                 special_division_sub_div[division_sub_name] = division_sub_id
 
-                if self.NORM_QUAN in division_sub_name:
-                    special_division_sub_div[
-                        division_sub_name.replace(self.NORM_QUAN, '').strip()] = division_sub_id
-                elif self.NORM_HUYEN in division_sub_name:
-                    special_division_sub_div[
-                        division_sub_name.replace(self.NORM_HUYEN, '').strip()] = division_sub_id
-                elif self.NORM_TX in division_sub_name:
-                    special_division_sub_div[
-                        division_sub_name.replace(self.NORM_TX, '').strip()] = division_sub_id
-                elif self.NORM_THANHPHO in division_sub_name:
-                    special_division_sub_div[
-                        division_sub_name.replace(self.NORM_THANHPHO, '').strip()] = division_sub_id
-                elif self.NORM_PHUONG in division_sub_name:
-                    special_division_sub_div[
-                        division_sub_name.replace(self.NORM_PHUONG, '').strip()] = division_sub_id
-                elif self.NORM_XA in division_sub_name:
-                    special_division_sub_div[
-                        division_sub_name.replace(self.NORM_XA, '').strip()] = division_sub_id
-                elif self.NORM_TT in division_sub_name:
-                    special_division_sub_div[
-                        division_sub_name.replace(self.NORM_TT, '').strip()] = division_sub_id
+                # if self.NORM_QUAN in division_sub_name:
+                #     special_division_sub_div[
+                #         division_sub_name.replace(self.NORM_QUAN, '').strip()] = division_sub_id
+                # elif self.NORM_HUYEN in division_sub_name:
+                #     special_division_sub_div[
+                #         division_sub_name.replace(self.NORM_HUYEN, '').strip()] = division_sub_id
+                # elif self.NORM_TX in division_sub_name:
+                #     special_division_sub_div[
+                #         division_sub_name.replace(self.NORM_TX, '').strip()] = division_sub_id
+                # elif self.NORM_THANHPHO in division_sub_name:
+                #     special_division_sub_div[
+                #         division_sub_name.replace(self.NORM_THANHPHO, '').strip()] = division_sub_id
+                # elif self.NORM_PHUONG in division_sub_name:
+                #     special_division_sub_div[
+                #         division_sub_name.replace(self.NORM_PHUONG, '').strip()] = division_sub_id
+                # elif self.NORM_XA in division_sub_name:
+                #     special_division_sub_div[
+                #         division_sub_name.replace(self.NORM_XA, '').strip()] = division_sub_id
+                # elif self.NORM_TT in division_sub_name:
+                #     special_division_sub_div[
+                #         division_sub_name.replace(self.NORM_TT, '').strip()] = division_sub_id
 
         except Exception as e:
             raise RuntimeError(e)

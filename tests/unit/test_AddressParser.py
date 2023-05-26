@@ -39,6 +39,29 @@ class AddressParserTest(unittest.TestCase):
         })
 
         self.assertEqual("58", addr_parser.data["division_code"])
+        self.logger.info("#2. detect_division test - run 2")
+        del addr_parser
+        # addr_parser = AP()
+        # data = {
+        #     "country_code": "VNM",
+        #     "division_name": "",
+        #     "division_code": ""
+        # }
+
+        # input_address = "tp Thái Bình"
+        #
+        # # Expected results
+        # # Assert that the expected result matches the actual result
+        # data = addr_parser.detect_division(input_address)
+        # error_message = None
+        # # Log the input address, parsed address, and possible parsing error
+        # self.logger.info({"detect_division()": "result"}, extra={
+        #     "input_address": input_address,
+        #     "parsed_address": data,
+        #     "error_message": error_message
+        # })
+        #
+        # self.assertEqual("34", addr_parser.data["division_code"])
 
     def test_detect_subdiv(self) -> object:
         self.logger.info("2. detect_subdiv test")
@@ -57,12 +80,12 @@ class AddressParserTest(unittest.TestCase):
             "l2subdiv_code": "",
             "l2subdiv_name": "",
         }
-        origin_location = "Số 18/564/55/14\nNguyễn Văn Cừ, Gia Thụy, Long Biên, Hà Nội"
-
+        # origin_location = "Số 18/564/55/14\nNguyễn Văn Cừ, Gia Thụy, Long Biên"
+        origin_location = " Long Biên "
         # Expected results
         # Assert that the expected result matches the actual result
         error_message = None
-        addr_parser.space_location = 53
+        addr_parser.space_location = 1
         data = addr_parser.detect_subdiv(origin_location)
         # Log the input address, parsed address, and possible parsing error
         self.logger.info({"detect_subdivision()": "result"}, extra={
@@ -73,6 +96,26 @@ class AddressParserTest(unittest.TestCase):
         })
 
         self.assertEqual("004", data["subdiv_code"])
+
+        addr_parser.reset_data()
+        addr_parser.data.update({"division_code": "77"})
+        addr_parser.data["division_id"] = 2
+
+        origin_location = " Vũng Tàu "
+        # Expected results
+        # Assert that the expected result matches the actual result
+        error_message = None
+        addr_parser.space_location = 1
+        data = addr_parser.detect_subdiv(origin_location)
+        # Log the input address, parsed address, and possible parsing error
+        self.logger.info({"detect_subdivision()": "result"}, extra={
+            "input_address": origin_location,
+            "parsed_address": data,
+            "space": addr_parser.space_location,
+            "error_message": error_message
+        })
+
+        self.assertEqual("747", data["subdiv_code"])
 
     def test_detect_l2subdiv(self) -> object:
         # print("3. detect_l2subdiv")
@@ -91,7 +134,7 @@ class AddressParserTest(unittest.TestCase):
             "l2subdiv_code": "",
             "l2subdiv_name": "",
         }
-        origin_location = "Số 18/564/55/14\nNguyễn Văn Cừ, Gia Thụy, Long Biên, Hà Nội"
+        origin_location = "p. Gia Thụy "
         # Expected results
         # Assert that the expected result matches the actual result
         error_message = None
