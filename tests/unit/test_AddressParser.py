@@ -25,7 +25,11 @@ class AddressParserTest(unittest.TestCase):
             "division_code": ""
         }
         # origin_location = "Số 18/564/55/14\nNguyễn Văn Cừ, Gia Thụy, Long Biên, Hà Nội"
-        input_address = "Ninh Thuận"
+        input_address = "Hồ Chí Minh"  # OK
+        input_address = "TP. Hồ Chí Minh"   # OK
+        input_address = "Thành phố Hồ Chí Minh"     # OK
+        input_address = "TP Hồ Chí Minh"    # OK
+        input_address = "TP Hồ Chí Minh"
 
         # Expected results
         # Assert that the expected result matches the actual result
@@ -38,30 +42,31 @@ class AddressParserTest(unittest.TestCase):
             "error_message": error_message
         })
 
-        self.assertEqual("58", addr_parser.data["division_code"])
+        self.assertEqual("79", addr_parser.data["division_code"])
         self.logger.info("#2. detect_division test - run 2")
         del addr_parser
-        # addr_parser = AP()
-        # data = {
-        #     "country_code": "VNM",
-        #     "division_name": "",
-        #     "division_code": ""
-        # }
 
-        # input_address = "tp Thái Bình"
-        #
-        # # Expected results
-        # # Assert that the expected result matches the actual result
-        # data = addr_parser.detect_division(input_address)
-        # error_message = None
-        # # Log the input address, parsed address, and possible parsing error
-        # self.logger.info({"detect_division()": "result"}, extra={
-        #     "input_address": input_address,
-        #     "parsed_address": data,
-        #     "error_message": error_message
-        # })
-        #
-        # self.assertEqual("34", addr_parser.data["division_code"])
+        addr_parser = AP()
+        data = {
+            "country_code": "VNM",
+            "division_name": "",
+            "division_code": ""
+        }
+
+        input_address = "tp Thái Bình"
+
+        # Expected results
+        # Assert that the expected result matches the actual result
+        data = addr_parser.detect_division(input_address)
+        error_message = None
+        # Log the input address, parsed address, and possible parsing error
+        self.logger.info({"detect_division()": "result"}, extra={
+            "input_address": input_address,
+            "parsed_address": data,
+            "error_message": error_message
+        })
+
+        self.assertEqual("34", addr_parser.data["division_code"])
 
     def test_detect_subdiv(self) -> object:
         self.logger.info("2. detect_subdiv test")
@@ -200,6 +205,56 @@ class AddressParserTest(unittest.TestCase):
             "error_message": error_message
         })
 
+    def test_detect_address_kh(self):
+
+        self.logger.info("5. test_detect_address khach hang")
+        addr_parser = AP()
+        error_message = None
+
+        # origin_location = "KP11, Phường Đông Hải, Thành phố Phan Rang-Tháp Chàm, Tỉnh Ninh Thuận"
+        # data = addr_parser.detect_address(origin_location)
+        #
+        # # Log the input address, parsed address, and possible parsing error
+        # self.logger.info({"detect_address()": "test result"}, extra={
+        #     "input_address": origin_location,
+        #     "parsed_address": data,
+        #     "error_message": error_message
+        # })
+
+        AP.reset_data(addr_parser)
+        origin_location = "L50/1 Tô Ký, phường Trung Mỹ Tây, Quận 12, TP Hồ Chí Minh"
+
+        data = addr_parser.detect_address(origin_location)
+        # Log the input address, parsed address, and possible parsing error
+        self.logger.info({"detect_address()": "test result"}, extra={
+            "input_address": origin_location,
+            "parsed_address": data,
+            "error_message": error_message
+        })
+
+        AP.reset_data(addr_parser)
+        origin_location = "Tân Mỹ B, Xã Chánh An, Huyện Mang Thít, Tỉnh Vĩnh Long"
+
+        data = addr_parser.detect_address(origin_location)
+        data = addr_parser.detect_address(origin_location)
+        # Log the input address, parsed address, and possible parsing error
+        self.logger.info({"detect_address()": "test result"}, extra={
+            "input_address": origin_location,
+            "parsed_address": data,
+            "error_message": error_message
+        })
+
+        AP.reset_data(addr_parser)
+        origin_location = "Thị trấn Rạch Gốc, Huyện Ngọc Hiển, Tỉnh Cà Mau"
+
+        data = addr_parser.detect_address(origin_location)
+        data = addr_parser.detect_address(origin_location)
+        # Log the input address, parsed address, and possible parsing error
+        self.logger.info({"detect_address()": "test result"}, extra={
+            "input_address": origin_location,
+            "parsed_address": data,
+            "error_message": error_message
+        })
 
 class MyTestSuite(unittest.TestSuite):
     def run(self, result, debug=False):

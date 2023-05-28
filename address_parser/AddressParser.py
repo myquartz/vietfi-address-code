@@ -76,6 +76,11 @@ class AP:
                         if division_code:
                             data['division_code'] = division_code
                 else:
+                    # remove prefix from word_check if any
+                    for key in ADH.pre_map.keys():
+                        word_check = word_check.removeprefix(key[0])
+                        word_check = word_check.strip()
+
                     sql = "SELECT divisionid, division_name, gso_code \
                                             FROM sys_division JOIN sys_country USING(countryid) \
                                             WHERE iso3 = ? AND lower(division_name) IN (?"
@@ -97,6 +102,8 @@ class AP:
                             data['division_name'] = division_name
                             data['division_code'] = division_code
                             data['division_id'] = division_id
+
+
             #     if division_id > 0:
             #         # print("3. if divisionID > 0")
             #
