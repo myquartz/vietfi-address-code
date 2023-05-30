@@ -49,14 +49,14 @@ if client is not None and bucketName is not None and not os.path.exists(DB_DIR +
 corsAllow = os.getenv('CORS_ALLOW_ORIGIN', '*')
 
 # Global DB Connection
-# dbcon = sqlite3.connect(DB_DIR + "/" + objectName)
-# dbcur = dbcon.cursor()
+# dbconn = sqlite3.connect(DB_DIR + "/" + objectName)
+# dbcur = dbconn.cursor()
 # Connect to database
 try:
-    dbcon = sqlite3.connect(DB_DIR + "/" + objectName)
-    cur = dbcon.cursor()
+    dbconn = sqlite3.connect(DB_DIR + "/" + objectName)
+    cur = dbconn.cursor()
 
-    if dbcon and cur:
+    if dbconn and cur:
         print("Database connection successful")
     else:
         print("Failed to connect to database")
@@ -79,6 +79,7 @@ def toCodeNameObj(arr):
 
 # define API request handlers
 def get_countries(event,context):
+    global headers
     sqlstatement = "SELECT iso3 AS code, nicename AS name FROM sys_country ORDER BY iso3"
     row_cnt = cur.execute(sqlstatement)
     data = json.dumps(list(map(toCodeNameObj, cur.fetchall())))
@@ -89,6 +90,7 @@ def get_countries(event,context):
     }
 
 def get_country_by_code(event,context):
+    global headers
     iso_code = event['pathParameters']['iso_code']
     params = (iso_code,)
     sqlstatement = "SELECT iso3, nicename FROM sys_country WHERE iso3 = ?"
@@ -105,6 +107,7 @@ def get_country_by_code(event,context):
     }
 
 def get_divisions_by_country_code(event,context):
+    global headers
     iso_code = event['pathParameters']['iso_code']
     params = (iso_code,)
     sqlstatement = "SELECT a.division_cd, a.division_name \
@@ -123,6 +126,7 @@ def get_divisions_by_country_code(event,context):
     }
 
 def get_subdivisions(event,context):
+    global headers
     iso_code = event['pathParameters']['iso_code']
     division_code = event['pathParameters']['division_code']
     params = (iso_code,division_code)
@@ -145,6 +149,7 @@ def get_subdivisions(event,context):
     }
 
 def get_l2subdivisions(event,context):
+    global headers
     iso_code = event['pathParameters']['iso_code']
     division_code = event['pathParameters']['division_code']
     subdiv_code = event['pathParameters']['subdiv_code']
@@ -172,13 +177,24 @@ def get_l2subdivisions(event,context):
     }
 
 def post_address_parser(event, context):
+    global headers
     # Extract the address text from the request body
-    address_text = event['body']['address_text']
+    # It is JSON
+    obj = json.loads(event['body'])
+    address_text = obj['address_text']
+
+    if address_text is None:
+        return {
+            statusCode: 400,
+            body: json.dumps({
+                "message": "address_text is required in JSON object"
+            })
+        }
 
     # Perform address parsing logic here
     # Calling function from class AddressParser
     # ...
-    ap = AP()
+    ap = AP(init_conn=dbconn)
     # Build the response payload
     response_payload = ap.detect_address(address_text)
 
@@ -197,6 +213,7 @@ def post_address_parser(event, context):
     # Return the response
     return {
         "statusCode": 200,
+        "headers": headers,
         "body": json.dumps(response_payload)
     }
 
@@ -217,7 +234,7 @@ api_routes = {
     '/countries/{iso_code}/divisions/{division_code}/subdivisions/{subdiv_code}/l2subdivisions': {
           'GET': get_l2subdivisions,
     },
-    '/address/': {
+    '/address': {
           'POST': post_address_parser,
     }
 
@@ -238,7 +255,7 @@ def lambda_handler(event, context):
    """
 
     total = 0
-    cur = dbcon.cursor()
+    cur = dbconn.cursor()
     try:
         # Routing by resource and method
         # See Event document above
@@ -280,7 +297,7 @@ def lambda_handler(event, context):
         return {
             "statusCode": 500,
             "body": json.dumps({
-                "message": "SQL error: " + str(err)
+                "message": "Error: " + str(err)
             }),
         }
     finally:
