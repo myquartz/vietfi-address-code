@@ -169,13 +169,13 @@
               return resp.json();
             })
             .then(function(data) {
-              var elm = document.getElementById('atv_result");
+              var elm = document.getElementById('atv_result');
                elm.innerText = JSON.stringify(data);
              
             })
             .catch(function(e) {
               //alert(e);
-var elm = document.getElementById('atv_result");
+var elm = document.getElementById('atv_result');
                elm.innerText = e;
             });
         }
