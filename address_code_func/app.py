@@ -182,17 +182,17 @@ def post_address_parser(event, context):
     # Build the response payload
     response_payload = ap.detect_address(address_text)
 
-    # sample response_payload
-    response_payload = {
-        'country_code': 'VNM',
-        'division_name': 'Thành phố Hà nội',
-        'division_code': 'VN-HN',
-        'subdivision_name': 'Quận Long Biên',
-        'subdivision_code': '004',
-        'l2subdivision_name': 'Phường Gia Thuỵ',
-        'l2suvdiv_code': '00130',
-        'address_line': 'Số 18/25 Nguyễn Văn Cừ'
-    }
+    # # sample response_payload
+    # response_payload = {
+    #     'country_code': 'VNM',
+    #     'division_name': 'Thành phố Hà nội',
+    #     'division_code': 'VN-HN',
+    #     'subdivision_name': 'Quận Long Biên',
+    #     'subdivision_code': '004',
+    #     'l2subdivision_name': 'Phường Gia Thuỵ',
+    #     'l2suvdiv_code': '00130',
+    #     'address_line': 'Số 18/25 Nguyễn Văn Cừ'
+    # }
 
     # Return the response
     return {
