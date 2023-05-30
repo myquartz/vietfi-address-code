@@ -162,7 +162,7 @@
         if(f.adt) {
           fetch(apiURL+"/address",{ method: "post", mode:"cors",headers:
                                    {"Content-type":"application/json"},
-                                   body: JSON.stringify({address_text: f.adt.value}))
+                                   body: JSON.stringify({address_text: f.adt.value})})
             .then(function(resp) {
               if(resp.status != 200)
                 throw "HTTP Error "+resp.status;
