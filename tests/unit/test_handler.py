@@ -3,16 +3,17 @@ import os
 os.environ["DB_DIR"] = "./s3-bucket"
 
 import pytest
+import sqlite3
 
 from address_code_func import app
 
 @pytest.fixture()
 def apigw_event():
     """ Generates API GW Event"""
-
+    
     return {
         "body": '',
-        "resource": "/countries",
+        "resource": "/countries/{ido_code}",
         "requestContext": {
             "resourceId": "123456",
             "apiId": "1234567890",
@@ -35,7 +36,7 @@ def apigw_event():
             },
             "stage": "prod",
         },
-        "queryStringParameters": {},
+        "queryStringParameters": {"unit": "test"},
         "headers": {
             "Via": "1.1 08f323deadbeefa7af34d5feb414ce27.cloudfront.net (CloudFront)",
             "Accept-Language": "en-US,en;q=0.8",
@@ -56,17 +57,18 @@ def apigw_event():
             "CloudFront-Forwarded-Proto": "https",
             "Accept-Encoding": "gzip, deflate, sdch",
         },
-        "pathParameters": {},
+        "pathParameters": {"iso_code": "VNM"},
         "httpMethod": "GET",
-        "stageVariables": {"baz": "qux"},
-        "path": "/countries",
+        "stageVariables": {},
+        "path": "/countries/VNM",
     }
 
 
 def test_lambda_handler(apigw_event):
-
+    print("DB_DIR: ", app.DB_DIR)
+    app.dbcon = sqlite3.connect("s3-bucket/country_div_sub.sqlite3")
     ret = app.lambda_handler(apigw_event, "")
     data = json.loads(ret["body"])
     print(ret)
     assert ret["statusCode"] == 200
-    assert "code" in ret["body"]
+    assert "VNM" in ret["body"]

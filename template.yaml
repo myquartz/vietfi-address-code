@@ -100,7 +100,7 @@ Resources:
 Outputs:
   AddressApi:
     Description: "API Gateway endpoint URL for Prod stage for AddressCodeFunction"
-    Value: !Sub "https://${AddressCodeApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/countries/"
+    Value: !Sub "https://${AddressCodeApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
   AddressCodeFunction:
     Description: "Lambda Function ARN"
     Value: !GetAtt AddressCodeFunction.Arn
