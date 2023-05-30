@@ -77,9 +77,10 @@ class AP:
                             data['division_code'] = division_code
                 else:
                     # remove prefix from word_check if any
-                    for key in ADH.pre_map.keys():
-                        word_check = word_check.removeprefix(key[0])
-                        word_check = word_check.strip()
+                    for key in self.adh.pre_map.keys():
+                        if key[1] == 1:
+                            word_check = word_check.removeprefix(key[0])
+                            word_check = word_check.strip()
 
                     sql = "SELECT divisionid, division_name, gso_code \
                                             FROM sys_division JOIN sys_country USING(countryid) \
@@ -158,8 +159,13 @@ class AP:
                         data['subdiv_name'] = subdiv_name
             else:
                 # handle abbreviation of subdivision like q. h.
-                # word_ext = self.adh.extend_prefix_to_fullname(word_check)
                 word_ext = self.adh.extend_prefix2fullname(word_check)
+                # remove prefix from word_check if any
+                for key in self.adh.pre_map.keys():
+                    if key[1] == 2:
+                        word_check = word_check.removeprefix(key[0])
+                        word_check = word_check.strip()
+
                 sql = "SELECT subdiv_cd, subdiv_name FROM sys_division_sub \
                      WHERE divisionid = ? AND l2subdiv_cd IS NULL \
                      AND subdiv_name IN (?,?"

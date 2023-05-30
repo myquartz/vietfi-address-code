@@ -86,7 +86,14 @@ class AddressParserTest(unittest.TestCase):
             "l2subdiv_name": "",
         }
         # origin_location = "Số 18/564/55/14\nNguyễn Văn Cừ, Gia Thụy, Long Biên"
-        origin_location = " Long Biên "
+        origin_location = "Long Biên "  # OK
+        origin_location = "q. Long Biên "  # OK
+        origin_location = "Q Long Biên "  # OK
+
+        # origin_location = "quận" # Not OK
+        # origin_location = "q2"  # Not OK
+
+
         # Expected results
         # Assert that the expected result matches the actual result
         error_message = None
