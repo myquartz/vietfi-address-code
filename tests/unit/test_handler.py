@@ -1,4 +1,6 @@
 import json
+import os
+os.environ["DB_DIR"] = "./s3-bucket"
 
 import pytest
 import sqlite3
@@ -11,12 +13,12 @@ def apigw_event():
     
     return {
         "body": '',
-        "resource": "/countries/{iso_code}",
+        "resource": "/countries/{ido_code}",
         "requestContext": {
             "resourceId": "123456",
             "apiId": "1234567890",
-            "resourcePath": "/{proxy+}",
-            "httpMethod": "POST",
+            "resourcePath": "/countries",
+            "httpMethod": "GET",
             "requestId": "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",
             "accountId": "123456789012",
             "identity": {

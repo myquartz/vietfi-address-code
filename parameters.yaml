@@ -1,0 +1,7 @@
+database:
+  path:   ./s3-bucket/address_db.sqlite3
+  driver: sqlite3
+  timeout: 10000
+logs:
+  path: ./addressparser.log
+

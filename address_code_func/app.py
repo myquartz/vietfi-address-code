@@ -4,7 +4,7 @@ import json
 # import requests
 import sqlite3
 import boto3
-
+from address_parser.AddressParser import AP
 # print(os.environ)
 
 '''
@@ -28,7 +28,7 @@ Refer to https://brianpfeil.com/post/aws-sam-local-invoke-with-lambda-role/
 
 '''
 
-DB_DIR = '/tmp'
+DB_DIR = os.getenv('DB_DIR','/tmp')
 
 bucketName = os.getenv('BUCKET_NAME')
 objectName = os.getenv('DB_FILE_KEY', 'country_div_sub.sqlite3')
@@ -46,7 +46,7 @@ if client is not None and bucketName is not None and not os.path.exists(DB_DIR +
             pass
 
 # CORS config
-corsAllow = os.getenv('CORS_ALLOW_ORIGIN', '')
+corsAllow = os.getenv('CORS_ALLOW_ORIGIN', '*')
 
 # Global DB Connection
 # dbcon = sqlite3.connect(DB_DIR + "/" + objectName)
@@ -171,6 +171,34 @@ def get_l2subdivisions(event,context):
         }) if not data else json.dumps(data, ensure_ascii=False),
     }
 
+def post_address_parser(event, context):
+    # Extract the address text from the request body
+    address_text = event['body']['address_text']
+
+    # Perform address parsing logic here
+    # Calling function from class AddressParser
+    # ...
+    ap = AP()
+    # Build the response payload
+    response_payload = ap.detect_address(address_text)
+
+    # # sample response_payload
+    # response_payload = {
+    #     'country_code': 'VNM',
+    #     'division_name': 'Thành phố Hà nội',
+    #     'division_code': 'VN-HN',
+    #     'subdivision_name': 'Quận Long Biên',
+    #     'subdivision_code': '004',
+    #     'l2subdivision_name': 'Phường Gia Thuỵ',
+    #     'l2suvdiv_code': '00130',
+    #     'address_line': 'Số 18/25 Nguyễn Văn Cừ'
+    # }
+
+    # Return the response
+    return {
+        "statusCode": 200,
+        "body": json.dumps(response_payload)
+    }
 
 # define API routes
 api_routes = {
@@ -188,7 +216,11 @@ api_routes = {
     },
     '/countries/{iso_code}/divisions/{division_code}/subdivisions/{subdiv_code}/l2subdivisions': {
           'GET': get_l2subdivisions,
+    },
+    '/address/': {
+          'POST': post_address_parser,
     }
+
 }
 
 def lambda_handler(event, context):
@@ -199,32 +231,12 @@ def lambda_handler(event, context):
     Parameters
     ----------
     event: dict, required
-        API Gateway Lambda Proxy Input Format
-
-        Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        #api-gateway-simple-proxy-for-lambda-input-format
-
     context: object, required
-        Lambda Context runtime methods and attributes
-
-        Context doc: https://docs.aws.amazon.com/lambda/latest/dg/python-context-object.html
-
     Returns
     ------
     API Gateway Lambda Proxy Output Format: dict
+   """
 
-        Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-    """
-
-    # print(event)
-    # print(type(event['requestContext']['requestId']))
-    # try:
-    #     ip = requests.get("http://checkip.amazonaws.com/")
-    # except requests.RequestException as e:
-    #     # Send some context about this error to Lambda Logs
-    #     print(e)
-
-    #     raise e
     total = 0
     cur = dbcon.cursor()
     try:
@@ -245,11 +257,6 @@ def lambda_handler(event, context):
             headers = {
                 "X-Count": str(total)
             }
-        # fixed CORS
-        headers = {
-            "Access-Control-Allow-Origin": "*",
-            "Content-Type": "application/json"
-        }
 
         if resource in api_routes:
             route = api_routes[resource]

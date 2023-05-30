@@ -97,7 +97,89 @@ and d.iso2 = 'VN'
 and b.subdiv_cd = '003'
 order by a.subdiv_name
 
+'---- new table for storing country specific adm unit prefix'
 
+CREATE TABLE "sys_prefix" (
+	"prefix_id"	INTEGER,
+	"prefix"	TEXT,
+	"unit_level"	INTEGER,
+	"country_code"	INTEGER,
+	UNIQUE("prefix","unit_level","country_code"),
+	PRIMARY KEY("prefix_id"),
+	CONSTRAINT "fk_country_code" FOREIGN KEY("country_code") REFERENCES "sys_country"("iso3")
+)
 
+-- populate prefixes for VNM
+insert into sys_prefix(prefix,unit_level,country_code)
+values('TP.',1,'VNM');
 
+insert into sys_prefix(prefix,unit_level,country_code)
+values('Tỉnh',1,'VNM');
 
+insert into sys_prefix(prefix,unit_level,country_code)
+values('Thành phố',1,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('Thành phố',2,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('Quận',2,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('Huyện',2,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('Thị xã',2,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('Phường',3,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('Xã',3,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('Thị trấn',3,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('TP',1,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('Q.',2,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('TX.',2,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('P.',2,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('F.',2,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('TT.',3,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('TT',3,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('TP.',2,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('TP',2,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('H.',2,'VNM');
+
+insert into sys_prefix(prefix,unit_level,country_code)
+values('X.',3,'VNM');
+
+-- select and update dictionary of constants
+select unit_level, length(prefix), lower(prefix)
+from sys_prefix
+where country_code = 'VNM'
+order by unit_level, length(prefix) desc, prefix
+
+select lower(prefix)
+from sys_prefix
+where country_code = 'VNM' and unit_level=2
+order by unit_level, length(prefix) desc, prefix
