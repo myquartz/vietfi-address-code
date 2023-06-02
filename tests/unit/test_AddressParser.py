@@ -30,6 +30,7 @@ class AddressParserTest(unittest.TestCase):
         input_address = "Thành phố Hồ Chí Minh"     # OK
         input_address = "TP Hồ Chí Minh"    # OK
         input_address = "TP Hồ Chí Minh"
+        input_address = "TP Ho Chi Minh"
 
         # Expected results
         # Assert that the expected result matches the actual result

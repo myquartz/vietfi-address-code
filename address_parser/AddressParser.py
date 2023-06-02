@@ -1,5 +1,8 @@
 import re
 from typing import Union
+
+from unidecode import unidecode
+
 from address_parser.ADHelper import ADH
 
 
@@ -104,6 +107,30 @@ class AP:
                             data['division_code'] = division_code
                             data['division_id'] = division_id
 
+                    else:
+                    # Try with non-accented string
+                        sql = "SELECT divisionid, division_name, gso_code \
+                                FROM sys_division JOIN sys_country USING(countryid) \
+                                WHERE iso3 = ? AND casefold(unidecode(division_name)) IN (?"
+                        # cur.execute(sql, params)
+                        word_check = unidecode(word_check)
+                        plist = [self.adh.country_code, word_check]
+                        for key, value in self.adh.pre_map.items():
+                            if key[1] == 1:
+                                plist.append(unidecode(key[0]) + ' ' + word_check)
+                                sql = sql + ",?"
+                        sql = sql + ")"
+                        params = tuple(plist)
+                        cur.execute(sql, params)
+
+                        row = cur.fetchone()
+                        # print(row)
+                        if row:
+                            division_id, division_name, division_code = row[0], row[1], row[2]
+                            if division_name:
+                                data['division_name'] = division_name
+                                data['division_code'] = division_code
+                                data['division_id'] = division_id
 
             #     if division_id > 0:
             #         # print("3. if divisionID > 0")

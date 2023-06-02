@@ -13,8 +13,11 @@ import re
 from typing import Dict
 import unicodedata
 
+from unidecode import unidecode
+
 global APP_PATH
 APP_PATH = os.getcwd()
+
 
 class CustomLogger(logging.Logger):
     """
@@ -147,6 +150,15 @@ class ADH:
     # def __del__(self):
     #     self.conn.close()
 
+    # create custom functions for Sqlite3 connection
+    global case_fold
+    def case_fold(s: str):
+        return s.casefold()
+
+    global uni_decode
+    def uni_decode(s: str):
+        return unidecode(s)
+
     def connect_database(self):
         # Connect to the address database in sqlite3
 
@@ -157,7 +169,9 @@ class ADH:
             try:
                 conn = sqlite3.connect(dbfile)
                 if conn:
-                    # print("Database connection successful")
+                    # print
+                    conn.create_function("CASEFOLD", 1, case_fold)
+                    conn.create_function("UNIDECODE", 1, uni_decode)
                     return conn
                 else:
                     print("Failed to connect to database")
@@ -195,7 +209,8 @@ class ADH:
     def extend_prefix2fullname(self, word_check: str):
         """ Extend address with prefix to full name """
         word = word_check.lower().strip()
-        ext = [value + ' ' + word[len(key[0]):].strip() for key, value in self.pre_map.items() if word.startswith(key[0])]
+        ext = [value + ' ' + word[len(key[0]):].strip() for key, value in self.pre_map.items() if
+               word.startswith(key[0])]
         fullname = ext[0] if ext else ""
         return fullname
 

@@ -1,6 +1,6 @@
 import json
 import os
-os.environ["DB_DIR"] = "./s3-bucket"
+# os.environ["DB_DIR"] = "./s3-bucket"
 
 import pytest
 import sqlite3
@@ -66,7 +66,9 @@ def apigw_event():
 
 def test_lambda_handler(apigw_event):
     print("DB_DIR: ", app.DB_DIR)
-    app.dbcon = sqlite3.connect("s3-bucket/country_div_sub.sqlite3")
+    # app.dbcon = sqlite3.connect("s3-bucket/country_div_sub.sqlite3")
+    dbfile = os.getenv('DB_DIR', '/tmp') + '/' + 'address_db.sqlite3'
+    app.dbcon = sqlite3.connect(dbfile)
     ret = app.lambda_handler(apigw_event, "")
     data = json.loads(ret["body"])
     print(ret)
