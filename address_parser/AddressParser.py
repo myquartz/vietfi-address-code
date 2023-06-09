@@ -82,12 +82,12 @@ class AP:
                     # remove prefix from word_check if any
                     for key in self.adh.pre_map.keys():
                         if key[1] == 1:
-                            word_check = word_check.removeprefix(key[0])
+                            word_check = word_check.removeprefix(key[0].lower())
                             word_check = word_check.strip()
 
                     sql = "SELECT divisionid, division_name, gso_code \
                                             FROM sys_division JOIN sys_country USING(countryid) \
-                                            WHERE iso3 = ? AND lower(division_name) IN (?"
+                                            WHERE iso3 = ? AND casefold(division_name) IN (?"
                     # cur.execute(sql, params)
                     plist = [self.adh.country_code, word_check]
                     for key, value in self.adh.pre_map.items():
@@ -131,24 +131,6 @@ class AP:
                                 data['division_name'] = division_name
                                 data['division_code'] = division_code
                                 data['division_id'] = division_id
-
-            #     if division_id > 0:
-            #         # print("3. if divisionID > 0")
-            #
-            #         backpos = temp_lc.find(ADH.NORM_TP + word_check)
-            #         if backpos >= 0:
-            #             temp_location = backpos - 1
-            #             # print("found " + ADH.NORM_TP + word_check + " at pos:" + temp_location)
-            #         if backpos < 0:
-            #             backpos = temp_lc.find(ADH.NORM_TINH + word_check)
-            #             if backpos >= 0:
-            #                 temp_location = backpos - 1
-            #                 # print("found " + ADC.NORM_TINH + word_check + " at pos:" + temp_location)
-            #         match_one = True
-            #         data["division_id"] = division_id
-            #         return data
-            # # check if this assignment is needed??? as in subdiv
-            #     self.space_location = temp_location
         return data
 
     def detect_subdiv(self, temp_str):
@@ -186,7 +168,10 @@ class AP:
                         data['subdiv_name'] = subdiv_name
             else:
                 # handle abbreviation of subdivision like q. h.
-                word_ext = self.adh.extend_prefix2fullname(word_check)
+                # word_ext = self.adh.extend_prefix2fullname(word_check)
+                # word_ext = self.adh.extend_prefix_to_fullname(word_check)
+                word_ext = self.adh.normalize_subdiv_name(word_check)
+
                 # remove prefix from word_check if any
                 for key in self.adh.pre_map.keys():
                     if key[1] == 2:
@@ -206,16 +191,6 @@ class AP:
                         sql = sql + ",?"
                 sql = sql + ")"
                 params = tuple(plist)
-                # params = (
-                #     division_id, word_check, word_ext,
-                #     ADH.NORM_QUAN + word_check,
-                #     ADH.NORM_HUYEN + word_check,
-                #     ADH.NORM_TX + word_check,
-                #     ADH.NORM_THANHPHO + word_check,
-                # )
-                # print(params)
-                # self.adh.plogger.info('sql =' + sql)
-
                 cur.execute(sql, params)
                 row = cur.fetchone()
                 # print(row)
@@ -227,8 +202,40 @@ class AP:
                     if n is not None:
                         data["subdiv_name"] = n
                 else:
-                    print("not found search result ")
-                    print(row)
+                    # print("not found search result ")
+                    # print(row)
+                    # search with un-accented text using unidecode
+                    # word_ext = unidecode(word_ext)
+                    word_check = unidecode(word_check)
+                    word_ext = self.adh.normalize_subdiv_name_un_accented(word_check)
+                    # remove prefix from word_check if any
+                    for key in self.adh.pre_map.keys():
+                        if key[1] == 2:
+                            word_check = word_check.removeprefix(key[0])
+                            word_check = word_check.strip()
+
+                    sql = "SELECT subdiv_cd, subdiv_name FROM sys_division_sub \
+                                         WHERE divisionid = ? AND l2subdiv_cd IS NULL \
+                                         AND casefold(unidecode(subdiv_name)) IN (?,?"
+
+                    plist = [division_id, word_check, word_ext, ]
+                    # print(plist)
+
+                    for key, value in self.adh.pre_map.items():
+                        if key[1] == 2:
+                            plist.append(unidecode(key[0]) + ' ' + word_check.strip())
+                            sql = sql + ",?"
+                    sql = sql + ")"
+                    params = tuple(plist)
+                    cur.execute(sql, params)
+                    row = cur.fetchone()
+                    if row is not None:
+                        subdiv_code = row[0]
+                        if subdiv_code is not None:
+                            data["subdiv_code"] = subdiv_code
+                        n = row[1]
+                        if n is not None:
+                            data["subdiv_name"] = n
 
         self.space_location = temp_location
         return data
@@ -269,23 +276,13 @@ class AP:
                         data['l2subdiv_name'] = l2subdiv_name
                 return data
             else:
-                # print("3.2 subdiv_code not found in special subdiv")
-                # word_ext = self.adh.extend_prefix_to_fullname(word_check)
+                # handle p02 cases
 
-                # sql = (
-                #     "SELECT l2subdiv_cd, subdiv_name FROM sys_division_sub \
-                #      WHERE divisionid = ? AND subdiv_name IN(?,?,?,?,?) \
-                #      AND subdiv_cd = ? \
-                #      AND l2subdiv_cd IS NOT NULL")
-                # params = (
-                #     division_id, word_check, word_ext,
-                #     ADH.NORM_PHUONG + word_check,
-                #     ADH.NORM_XA + word_check,
-                #     ADH.NORM_TT + word_check,
-                #     subdiv_code,
-                # )
-                word_ext = self.adh.extend_prefix2fullname(word_check)
-                print("word_ext:", word_ext)
+                # word_ext = self.adh.extend_prefix2fullname(word_check)
+                # word_ext = self.adh.extend_prefix_to_fullname(word_check)
+                word_ext = self.adh.normalize_subdiv_name(word_check)
+
+                # print("word_ext:", word_ext)
                 sql = "SELECT l2subdiv_cd, subdiv_name FROM sys_division_sub \
                      WHERE divisionid = ? AND l2subdiv_cd IS NOT NULL \
                      AND subdiv_cd = ? \
@@ -299,7 +296,7 @@ class AP:
                 sql = sql + ")"
 
                 params = tuple(plist)
-                print(params)
+                print('detect_l2sub - params', params)
 
                 # print("3.3. searching l2subdiv in the db")
                 cur.execute(sql, params)
@@ -313,8 +310,39 @@ class AP:
                     if l2subdiv_name is not None:
                         data["l2subdiv_name"] = l2subdiv_name
                 else:
-                    print("l2subdiv_code not found in search result ")
-                    print(row)
+                    # searching using un-accented text
+                    # print("l2subdiv_code not found in search result ")
+                    # print(row)
+                    # word_ext = unidecode(word_ext)
+                    word_check = unidecode(word_check)
+                    word_ext = self.adh.normalize_subdiv_name_un_accented(word_check)
+
+                    sql = "SELECT l2subdiv_cd, subdiv_name FROM sys_division_sub \
+                                         WHERE divisionid = ? AND l2subdiv_cd IS NOT NULL \
+                                         AND subdiv_cd = ? \
+                                         AND casefold(unidecode(subdiv_name)) IN(?,?"
+
+                    plist = [division_id, subdiv_code, word_check.strip(), word_ext, ]
+                    for key, value in self.adh.pre_map.items():
+                        if key[1] == 3:
+                            plist.append(unidecode(key[0]) + ' ' + word_check.strip())
+                            sql = sql + ",?"
+                    sql = sql + ")"
+
+                    params = tuple(plist)
+                    print('detect_l2sub - uni params', params)
+
+                    # print("3.3. searching l2subdiv in the db")
+                    cur.execute(sql, params)
+                    row = cur.fetchone()
+                    # print(row)
+                    if row:
+                        l2subdiv_code = row[0]
+                        if l2subdiv_code is not None:
+                            data["l2subdiv_code"] = l2subdiv_code
+                        l2subdiv_name = row[1]
+                        if l2subdiv_name is not None:
+                            data["l2subdiv_name"] = l2subdiv_name
 
             return data
 
