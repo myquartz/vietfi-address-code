@@ -4,7 +4,7 @@ import json
 # import requests
 import sqlite3
 import boto3
-from address_parser.AddressParser import AP
+from .address_parser.AddressParser import AP
 # print(os.environ)
 
 '''

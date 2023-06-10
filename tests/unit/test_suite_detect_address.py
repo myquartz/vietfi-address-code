@@ -1,5 +1,5 @@
 import unittest
-from address_parser.AddressParser import AP
+from address_code_func.address_parser.AddressParser import AP
 from unidecode import unidecode
 import re
 
@@ -32,6 +32,15 @@ def normalize_address(address):
 
 class MyTestCase(unittest.TestCase):
 
+    def test_address_11(self):
+        address_parser = AP()
+
+        adt = "Số 1 đường Nguyễn Trãi, phường không xác định, quận 05, thành phố Hồ Chí Minh"
+        data = address_parser.detect_address(adt)
+        print('input data', adt)
+        print('parsed data', data)
+        self.assertEqual(data["address_line"], "Số 1 đường Nguyễn Trãi, phường không xác định")  # add assertion here
+
     def test_address_10(self):
         address_parser = AP()
 
@@ -60,6 +69,7 @@ class MyTestCase(unittest.TestCase):
         data = address_parser.detect_address(adt_uni)
         print(data)
         self.assertEqual(data["division_code"], "79")  # add assertion here
+    
     def test_address_01(self):
         address_parser = AP()
 

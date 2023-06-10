@@ -13,7 +13,7 @@ def apigw_event():
     
     return {
         "body": '',
-        "resource": "/countries/{ido_code}",
+        "resource": "/countries/{iso_code}",
         "requestContext": {
             "resourceId": "123456",
             "apiId": "1234567890",

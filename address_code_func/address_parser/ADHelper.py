@@ -149,7 +149,10 @@ class ADH:
             #     self.params = yaml.safe_load(f)
             #
             # logfile = self.params["logs"]["path"]
-            logfile = os.getenv('LOG_DIR', '/tmp') + '/' + 'addressparser.log'
+            logdir = os.getenv('LOG_DIR', '/tmp')
+            if not os.path.exists(logdir):
+                os.makedirs(logdir)
+            logfile = logdir + '/' + 'addressparser.log'
             self.plogger = CustomLogger(logfile)
             if self.plogger is None:
                 print("Something wrong!")

@@ -3,7 +3,7 @@ from typing import Union
 
 from unidecode import unidecode
 
-from address_parser.ADHelper import ADH
+from .ADHelper import ADH
 
 
 # result set of the address parser
@@ -351,13 +351,11 @@ class AP:
         # detect address codes from address_text
         # Step 1: normalize address_text
         # Step 2: split address text into words
-        array = re.split(r'[,;\n]', address_text.lower().strip())
+        array = re.split(r'[,;\n]\s*', address_text.strip())
         array_len = len(array) - 1
 
         AP.reset_data(AP)  # reset data record
         data: dict[str, Union[str, int]] = self.data
-
-        data["address_line"] = array[0]
 
         division_id = 0
         subdiv_code = None
@@ -367,13 +365,19 @@ class AP:
         # Step main loop thru the array
         # k = array_len
         # for k in range(len(array) - 1, -1, -1):
+        k = len(array)
         for tempStr in reversed(array):
-            tempStr = tempStr.strip()
+            tempStr = tempStr.lower().strip()
             # print(k, tempStr)
             # detect division
             if division_id == 0:
                 data = self.detect_division(tempStr)
                 division_id = data.get("division_id")
+                # neu khong co division thi khong can lam gi nua
+                if division_id is None or division_id == 0:
+                    break
+                else:
+                    k -= 1
                 continue
 
             if subdiv_code is None:
@@ -383,6 +387,13 @@ class AP:
                     data = data1
                     # print("proc 4.2:", data)
                     subdiv_code = data.get("subdiv_code")
+                    # neu subdiv_code khong co thi khong can lam gi nua
+                    if subdiv_code is None:
+                        break
+                    else:
+                        k -= 1
+                else:
+                    break
                 continue
 
             if l2subdiv_code is None:
@@ -392,5 +403,12 @@ class AP:
                     data = data1
                     # print("proc 4.3:", data)
                     l2subdiv_code = data.get("l2subdiv_code")
+                    # neu l2subdiv_code khong co thi khong can lam gi nua
+                    if l2subdiv_code is not None:
+                        k -= 1
+                break
                 # continue
+            if k == 0:
+                break
+        data["address_line"] = ", ".join(array[0:k])
         return data
