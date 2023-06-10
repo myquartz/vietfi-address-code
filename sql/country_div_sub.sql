@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS sys_division (
 
 CREATE INDEX IF NOT EXISTS gso_code ON sys_division(gso_code);
 
+CREATE UNIQUE INDEX division_unique_iso ON sys_division(division_cd);
+
 CREATE TABLE IF NOT EXISTS sys_division_sub (
   subdivid INTEGER PRIMARY KEY AUTOINCREMENT,
   divisionid INTEGER NOT NULL,
