@@ -11,7 +11,7 @@ Globals:
     EndpointConfiguration: REGIONAL
 
   Function:
-    Timeout: 30
+    Timeout: 3
     MemorySize: 256
 
 Parameters:
