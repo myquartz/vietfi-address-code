@@ -8,7 +8,7 @@ import sys
 # import pathlib
 import sqlite3
 import json
-import yaml
+# ko con su dung import yaml
 import re
 from typing import Dict
 import unicodedata
