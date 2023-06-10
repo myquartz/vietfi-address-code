@@ -96,6 +96,12 @@ Resources:
             RestApiId: !Ref AddressCodeApi
             Path: /countries/{iso_code}/divisions/{division_code}/subdivisions/{subdiv_code}/l2subdivisions
             Method: get
+        AddressTextParser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AddressCodeApi
+            Path: /address
+            Method: post
 
 Outputs:
   AddressApi:

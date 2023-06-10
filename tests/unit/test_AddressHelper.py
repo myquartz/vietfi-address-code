@@ -1,5 +1,5 @@
 import pytest
-from address_parser.ADHelper import ADH
+from address_code_func.address_parser.ADHelper import ADH
 
 
 def test_load_special_mapping():

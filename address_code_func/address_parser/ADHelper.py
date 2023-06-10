@@ -9,6 +9,7 @@ import sys
 import sqlite3
 import json
 # ko con su dung import yaml
+#import yaml
 import re
 from typing import Dict
 import unicodedata
@@ -28,7 +29,7 @@ class CustomLogger(logging.Logger):
     Custom Logger supporting UTF8 and indented JSON format
     """
 
-    def __init__(self, name, level=logging.DEBUG):
+    def __init__(self, name=None, level=logging.DEBUG):
         super().__init__(name, level)
 
         if name is not None:
@@ -44,11 +45,12 @@ class CustomLogger(logging.Logger):
 
             # Add the handler to the logger
             self.addHandler(file_handler)
-
-        # Create a stream handler for console output (stdout)
-        stream_handler = logging.StreamHandler(sys.stdout)
-        stream_handler.setFormatter(formatter)
-        self.addHandler(stream_handler)
+        else:
+            formatter = logging.Formatter('%(name)s %(levelname)s: %(message)s')
+            # Create a stream handler for console output (stdout)
+            stream_handler = logging.StreamHandler(sys.stdout)
+            stream_handler.setFormatter(formatter)
+            self.addHandler(stream_handler)
 
     def makeRecord(self, name, level, fn, lno, msg, args, exc_info, func=None, extra=None, sinfo=None, **kwargs):
         if extra is None:
@@ -152,12 +154,13 @@ class ADH:
             if self.plogger is None:
                 print("Something wrong!")
                 exit(98)
+            self.conn = self.connect_database()
         else:
             self.plogger = CustomLogger()
+            self.conn = init_conn
 
         self.plogger.info("Starting new address parsing session")
-
-        self.conn = self.connect_database()
+        
         if init_country is not None:
             self.country_code = init_country
         else:

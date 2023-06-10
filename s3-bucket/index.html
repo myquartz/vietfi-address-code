@@ -43,7 +43,7 @@
         <button type="submit" onclick="alert('You selected '+JSON.stringify([document.cdv.elements[0].value,document.cdv.elements[1].value,document.cdv.elements[2].value,document.cdv.elements[3].value])); return false" 
           class="btn btn-primary">Submit</button>
       </form>
-      <form name="atv" onsubmit="address_detect(this)">
+      <form name="atv" onsubmit="return address_detect(this)">
         <div class="mb-3">
           <label for="addressText" class="form-label">Address text</label>
           <input id="addressText" name="adt" required="yes" class="form-control">
@@ -158,6 +158,36 @@
           document.getElementById('divisionSelect').length = 1;
       }
 
+      function selectSubDivision(ctry, div, elm) {
+        if(elm.value) {
+          fetch(apiURL+"/countries/"+ctry+"/divisions/"+div+"/subdivisions/"+elm.value+"/l2subdivisions")
+            .then(function(resp) {
+              if(resp.status != 200)
+                throw "HTTP Error "+resp.status;
+              return resp.json();
+            })
+            .then(function(l2subdivisions) {
+              var elm = document.getElementById('l2SubDivSelect');
+              elm.length = 0;
+              var def = document.createElement('option');
+              def.text = '-- please select --';
+              elm.add(def);
+              l2subdivisions.forEach(c => {
+                var opt = document.createElement('option');
+                opt.value = c.code;
+                opt.text = c.name;
+                elm.add(opt);
+              });
+            })
+            .catch(function(e) {
+              //alert(e);
+            });
+        }
+        else
+        //clear all except first item
+          document.getElementById('divisionSelect').length = 1;
+        }
+
       function address_detect(f) {
         if(f.adt) {
           fetch(apiURL+"/address",{ method: "post", mode:"cors",headers:
@@ -179,66 +209,9 @@ var elm = document.getElementById('atv_result');
                elm.innerText = e;
             });
         }
-        
+        return false;
       }
       
-      function selectSubDivision(ctry, div, elm) {
-
-        if(elm.value) {
-
-          fetch(apiURL+"/countries/"+ctry+"/divisions/"+div+"/subdivisions/"+elm.value+"/l2subdivisions")
-
-            .then(function(resp) {
-
-              if(resp.status != 200)
-
-                throw "HTTP Error "+resp.status;
-
-              return resp.json();
-
-            })
-
-            .then(function(l2subdivisions) {
-
-              var elm = document.getElementById('l2SubDivSelect');
-
-              elm.length = 0;
-
-              var def = document.createElement('option');
-
-              def.text = '-- please select --';
-
-              elm.add(def);
-
-              l2subdivisions.forEach(c => {
-
-                var opt = document.createElement('option');
-
-                opt.value = c.code;
-
-                opt.text = c.name;
-
-                elm.add(opt);
-
-              });
-
-            })
-
-            .catch(function(e) {
-
-              //alert(e);
-
-            });
-
-        }
-
-        else
-
-        //clear all except first item
-
-          document.getElementById('divisionSelect').length = 1;
-
-      }
     </script>
   </body>
 </html>

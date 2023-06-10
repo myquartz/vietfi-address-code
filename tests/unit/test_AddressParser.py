@@ -1,7 +1,7 @@
 import unittest
 
-from address_parser.ADHelper import ADH
-from address_parser.AddressParser import AP
+from address_code_func.address_parser.ADHelper import ADH
+from address_code_func.address_parser.AddressParser import AP
 
 
 class AddressParserTest(unittest.TestCase):
