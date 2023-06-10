@@ -183,7 +183,6 @@ class AP:
                      AND subdiv_name IN (?,?"
 
                 plist = [division_id, word_check, word_ext, ]
-                # print(plist)
 
                 for key, value in self.adh.pre_map.items():
                     if key[1] == 2:
@@ -191,6 +190,7 @@ class AP:
                         sql = sql + ",?"
                 sql = sql + ")"
                 params = tuple(plist)
+                print('detect_subdiv - params', params)
                 cur.execute(sql, params)
                 row = cur.fetchone()
                 # print(row)
@@ -388,7 +388,7 @@ class AP:
                     # print("proc 4.2:", data)
                     subdiv_code = data.get("subdiv_code")
                     # neu subdiv_code khong co thi khong can lam gi nua
-                    if subdiv_code is None:
+                    if subdiv_code is None or subdiv_code == '':
                         break
                     else:
                         k -= 1
@@ -404,7 +404,7 @@ class AP:
                     # print("proc 4.3:", data)
                     l2subdiv_code = data.get("l2subdiv_code")
                     # neu l2subdiv_code khong co thi khong can lam gi nua
-                    if l2subdiv_code is not None:
+                    if l2subdiv_code is not None and l2subdiv_code != '':
                         k -= 1
                 break
                 # continue

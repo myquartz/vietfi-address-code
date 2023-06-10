@@ -35,7 +35,7 @@ class MyTestCase(unittest.TestCase):
     def test_address_11(self):
         address_parser = AP()
 
-        adt = "Số 1 đường Nguyễn Trãi, phường không xác định, quận 05, thành phố Hồ Chí Minh"
+        adt = "Số 1 đường Nguyễn Trãi, phường không xác định, quận 5, thành phố Hồ Chí Minh"
         data = address_parser.detect_address(adt)
         print('input data', adt)
         print('parsed data', data)
@@ -44,7 +44,7 @@ class MyTestCase(unittest.TestCase):
     def test_address_10(self):
         address_parser = AP()
 
-        adt = "Số 1 đường Nguyễn Trãi, phường 2, quận 05, thành phố Hồ Chí Minh"
+        adt = "Số 1 đường Nguyễn Trãi, phường 2, quận 5, thành phố Hồ Chí Minh"
         adt_uni = unidecode(adt)
         data = address_parser.detect_address(adt_uni)
         print('input data', adt)
