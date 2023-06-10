@@ -8,13 +8,21 @@ import sys
 # import pathlib
 import sqlite3
 import json
+# ko con su dung import yaml
 #import yaml
 import re
 from typing import Dict
 import unicodedata
 
+from unidecode import unidecode
+
 global APP_PATH
+global LOG_DIR
+global DB_DIR
+
+
 APP_PATH = os.getcwd()
+
 
 class CustomLogger(logging.Logger):
     """
@@ -94,7 +102,24 @@ class ADH:
     #     "p.": NORM_PHUONG,
     #     "x.": NORM_XA
     # }
+    # global prefix_mapping
+    subdiv_mapping = {
+        'q': 'quận',
+        'quận': 'quận',
+        'p': 'phường',
+        'phường': 'phường'
+        # Add more division mappings as needed
+    }
 
+    subdiv_mapping_un_accented = {
+        'q': 'quan',
+        'quan': 'quan',
+        'p': 'phuong',
+        'phuong': 'phuong'
+        # Add more division mappings as needed
+    }
+
+    pre_dic = {}        # prefix dictionary for normalization
     pre_map = {}
     # address data structure
     data = {
@@ -124,7 +149,10 @@ class ADH:
             #     self.params = yaml.safe_load(f)
             #
             # logfile = self.params["logs"]["path"]
-            logfile = os.getenv('LOG_DIR', '/tmp') + '/' + 'addressparser.log'
+            logdir = os.getenv('LOG_DIR', '/tmp')
+            if not os.path.exists(logdir):
+                os.makedirs(logdir)
+            logfile = logdir + '/' + 'addressparser.log'
             self.plogger = CustomLogger(logfile)
             if self.plogger is None:
                 print("Something wrong!")
@@ -133,6 +161,8 @@ class ADH:
         else:
             self.plogger = CustomLogger()
             self.conn = init_conn
+            self.conn.create_function("CASEFOLD", 1, case_fold)
+            self.conn.create_function("UNIDECODE", 1, uni_decode)
 
         self.plogger.info("Starting new address parsing session")
         
@@ -142,12 +172,22 @@ class ADH:
             self.country_code = "VNM"
 
         # creating dictionary of constants
-        self.load_prefix_mapping()
+        self.pre_map = self.create_prefix_mapping()
+        self.pre_dic = self.create_prefix_dictionary()
 
         self.load_special_mapping()
 
     # def __del__(self):
     #     self.conn.close()
+
+    # create custom functions for Sqlite3 connection
+    global case_fold
+    def case_fold(s: str):
+        return s.casefold()
+
+    global uni_decode
+    def uni_decode(s: str):
+        return unidecode(s)
 
     def connect_database(self):
         # Connect to the address database in sqlite3
@@ -159,7 +199,9 @@ class ADH:
             try:
                 conn = sqlite3.connect(dbfile)
                 if conn:
-                    # print("Database connection successful")
+                    # print
+                    conn.create_function("CASEFOLD", 1, case_fold)
+                    conn.create_function("UNIDECODE", 1, uni_decode)
                     return conn
                 else:
                     print("Failed to connect to database")
@@ -177,7 +219,8 @@ class ADH:
             sys.exit()
         return conn
 
-    def load_prefix_mapping(self):
+    def create_prefix_mapping(self):
+        _pre_map = {}
         cur = self.conn.cursor()
         sql = "select lower(prefix), lower(name), unit_level \
                from sys_prefix \
@@ -188,33 +231,105 @@ class ADH:
         rows = cur.fetchall()
         # print(rows)
         for row in rows:
-            # self.p_map[row[0]] = row[1]
-            self.pre_map[row[0], row[2]] = row[1]
+            _pre_map[row[0], row[2]] = row[1]
 
-        # print(self.p_map)
         cur.close()
+        return _pre_map
+
+
+
+    def create_prefix_dictionary(self):
+        # Connect to the SQLite database
+        cur = self.conn.cursor()
+        sql = "select lower(prefix), lower(name), unit_level \
+                       from sys_prefix \
+                       where country_code = ?"
+
+        params = (self.country_code,)
+        cur.execute(sql, params)
+
+        # Initialize the pre_map dictionary
+        pre_map = {}
+
+        # Iterate over the query results
+        for row in cur.fetchall():
+            unit_level = row[2]
+            prefix = row[0]
+            fullname = row[1]
+
+            # Create the nested dictionaries if needed
+            if unit_level not in pre_map:
+                pre_map[unit_level] = {}
+
+            # Add the prefix and fullname to the pre_map dictionary
+            pre_map[unit_level][prefix] = fullname
+
+        # Close the database cursor
+        cur.close()
+
+        return pre_map
 
     def extend_prefix2fullname(self, word_check: str):
         """ Extend address with prefix to full name """
         word = word_check.lower().strip()
-        ext = [value + ' ' + word[len(key[0]):].strip() for key, value in self.pre_map.items() if word.startswith(key[0])]
+        ext = [value + ' ' + word[len(key[0]):].strip() for key, value in self.pre_map.items() if
+               word.startswith(key[0])]
         fullname = ext[0] if ext else ""
         return fullname
 
-    # def extend_prefix_to_fullname(self, word_check):
-    #     """extend prefix abbreviation into full prefix"""
-    #
-    #     if re.match(r"^[qQ]\d+.*", word_check):
-    #         return self.NORM_QUAN + word_check[1:].strip()
-    #     elif re.match(r"^[pP]\d+.*", word_check):
-    #         return self.NORM_PHUONG + word_check[1:].strip()
-    #
-    #     for prefix, normalized_prefix in self.prefix_mapping.items():
-    #         if word_check.lower().startswith(prefix):
-    #             return normalized_prefix + word_check[len(prefix):].strip()
-    #
-    #     return None
+    def extend_prefix_to_fullname(self, word_check):
+        """extend prefix abbreviation into full prefix"""
 
+        if re.match(r"^[qQ]\d+.*", word_check):
+            return self.NORM_QUAN + word_check[1:].strip()
+        elif re.match(r"^[pP]\d+.*", word_check):
+            return self.NORM_PHUONG + word_check[1:].strip()
+
+        for prefix, normalized_prefix in self.pre_map.items():
+            if word_check.lower().startswith(prefix[0]):
+                return normalized_prefix + word_check[len(prefix[0]):].strip()
+
+        return None
+
+    def normalize_subdiv_name(self, input_text):
+        # Remove non-alphanumeric characters and convert to lowercase
+        normalized_text = re.sub(r'[^a-zA-Z0-9]+', ' ', input_text.lower())
+        print(normalized_text)
+
+        # Extract the division prefix and number
+        match = re.match(r'([a-z]+)\s*(\d+)', normalized_text)
+        if match:
+            div_prefix = match.group(1)
+            div_number = int(match.group(2))
+
+            # Normalize the division prefix
+            div_name = self.subdiv_mapping.get(div_prefix, div_prefix)
+            if div_name == 'phường':
+                normalized_text = f"{div_name} {div_number:02d}"
+            else:
+                normalized_text = f"{div_name} {div_number:d}"
+
+        return normalized_text
+
+    def normalize_subdiv_name_un_accented(self, input_text):
+        # Remove non-alphanumeric characters and convert to lowercase
+        normalized_text = re.sub(r'[^a-zA-Z0-9]+', ' ', input_text.lower())
+        print(normalized_text)
+
+        # Extract the division prefix and number
+        match = re.match(r'([a-z]+)\s*(\d+)', normalized_text)
+        if match:
+            div_prefix = match.group(1)
+            div_number = int(match.group(2))
+
+            # Normalize the division prefix
+            div_name = self.subdiv_mapping_un_accented.get(div_prefix, div_prefix)
+            if div_name == 'phuong':
+                normalized_text = f"{div_name} {div_number:02d}"
+            else:
+                normalized_text = f"{div_name} {div_number:d}"
+
+        return normalized_text
     def load_special_mapping(self):
         special_division: Dict[str, int] = {}
         special_division_sub_div: Dict[str, int] = {}

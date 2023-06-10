@@ -29,7 +29,8 @@ class AddressParserTest(unittest.TestCase):
         input_address = "TP. Hồ Chí Minh"   # OK
         input_address = "Thành phố Hồ Chí Minh"     # OK
         input_address = "TP Hồ Chí Minh"    # OK
-        input_address = "TP Hồ Chí Minh"
+        input_address = "TP Hồ Chí Minh"    #
+        input_address = "TP Ho Chi Minh"
 
         # Expected results
         # Assert that the expected result matches the actual result
@@ -77,9 +78,9 @@ class AddressParserTest(unittest.TestCase):
         # Inputs
         addr_parser.data = {
             "country_code": "VNM",
-            "division_name": "TP. Hà Nội",
-            "division_code": "01",
-            "division_id": 18,
+            "division_name": "",
+            "division_code": "",
+            "division_id": 2,
             "subdiv_code": "",
             "subdiv_name": "",
             "l2subdiv_code": "",
@@ -89,6 +90,9 @@ class AddressParserTest(unittest.TestCase):
         origin_location = "Long Biên "  # OK
         origin_location = "q. Long Biên "  # OK
         origin_location = "Q Long Biên "  # OK
+        origin_location = "Q Long Bien "  # OK
+        origin_location = "Huyện Côn đảo" ## , Tỉnh Ba Ria - Vung Tau"
+        origin_location = "H. CON DAO"  ## , Tỉnh Ba Ria - Vung Tau"
 
         # origin_location = "quận" # Not OK
         # origin_location = "q2"  # Not OK
@@ -107,13 +111,14 @@ class AddressParserTest(unittest.TestCase):
             "error_message": error_message
         })
 
-        self.assertEqual("004", data["subdiv_code"])
+        self.assertEqual("755", data["subdiv_code"])
 
         addr_parser.reset_data()
         addr_parser.data.update({"division_code": "77"})
         addr_parser.data["division_id"] = 2
 
         origin_location = " Vũng Tàu "
+        origin_location = " Vung tau "
         # Expected results
         # Assert that the expected result matches the actual result
         error_message = None
@@ -147,6 +152,7 @@ class AddressParserTest(unittest.TestCase):
             "l2subdiv_name": "",
         }
         origin_location = "p. Gia Thụy "
+        origin_location = "p. Gia thuy "
         # Expected results
         # Assert that the expected result matches the actual result
         error_message = None
@@ -179,6 +185,7 @@ class AddressParserTest(unittest.TestCase):
 
         AP.reset_data(addr_parser)
         origin_location = "Số 18/564/55/14\nNguyễn Văn Cừ, Gia Thụy, Long Biên, Hà Nội"
+        origin_location = "Số 18/564/55/14\nNguyễn Văn Cừ, Gia Thuy, Long Bien, Ha noi"
 
         data = addr_parser.detect_address(origin_location)
         # Log the input address, parsed address, and possible parsing error
@@ -190,6 +197,7 @@ class AddressParserTest(unittest.TestCase):
 
         AP.reset_data(addr_parser)
         origin_location = "13 phố Hàng Chuối\nPhạm Đình Hồ, Hai Bà Trưng, Hà Nội"
+        origin_location = "13 phố Hàng Chuối\nPhạm Đình Hồ, Hai Bà trung, Ha noi"
 
         data = addr_parser.detect_address(origin_location)
         data = addr_parser.detect_address(origin_location)
@@ -201,6 +209,7 @@ class AddressParserTest(unittest.TestCase):
         })
 
         AP.reset_data(addr_parser)
+        origin_location = " Phú Nhuận, Tp. Huế, Tỉnh Thừa Thiên-Huế"
         origin_location = " Phú Nhuận, Tp. Huế, Tỉnh Thừa Thiên-Huế"
 
         data = addr_parser.detect_address(origin_location)
@@ -217,17 +226,6 @@ class AddressParserTest(unittest.TestCase):
         self.logger.info("5. test_detect_address khach hang")
         addr_parser = AP()
         error_message = None
-
-        # origin_location = "KP11, Phường Đông Hải, Thành phố Phan Rang-Tháp Chàm, Tỉnh Ninh Thuận"
-        # data = addr_parser.detect_address(origin_location)
-        #
-        # # Log the input address, parsed address, and possible parsing error
-        # self.logger.info({"detect_address()": "test result"}, extra={
-        #     "input_address": origin_location,
-        #     "parsed_address": data,
-        #     "error_message": error_message
-        # })
-
         AP.reset_data(addr_parser)
         origin_location = "L50/1 Tô Ký, phường Trung Mỹ Tây, Quận 12, TP Hồ Chí Minh"
 
@@ -253,6 +251,7 @@ class AddressParserTest(unittest.TestCase):
 
         AP.reset_data(addr_parser)
         origin_location = "Thị trấn Rạch Gốc, Huyện Ngọc Hiển, Tỉnh Cà Mau"
+        origin_location = "Huyện Côn đảo, Tỉnh Ba Ria - Vung Tau"
 
         data = addr_parser.detect_address(origin_location)
         data = addr_parser.detect_address(origin_location)
