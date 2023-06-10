@@ -158,6 +158,8 @@ class ADH:
         else:
             self.plogger = CustomLogger()
             self.conn = init_conn
+            self.conn.create_function("CASEFOLD", 1, case_fold)
+            self.conn.create_function("UNIDECODE", 1, uni_decode)
 
         self.plogger.info("Starting new address parsing session")
         
