@@ -204,7 +204,7 @@ class ADH:
                     conn.create_function("UNIDECODE", 1, uni_decode)
                     return conn
                 else:
-                    print("Failed to connect to database")
+                    #print("Failed to connect to database")
                     self.plogger.error("Failed to connect to database")
                     sys.exit()
 
@@ -293,8 +293,9 @@ class ADH:
 
     def normalize_subdiv_name(self, input_text):
         # Remove non-alphanumeric characters and convert to lowercase
-        normalized_text = re.sub(r'[^a-zA-Z0-9]+', ' ', input_text.lower())
-        print(normalized_text)
+        #BUG: normalized_text = re.sub(r'[^a-zA-Z0-9]+', ' ', input_text.lower())
+        normalized_text = input_text.lower()
+        #print(normalized_text)
 
         # Extract the division prefix and number
         match = re.match(r'([a-z]+)\s*(\d+)', normalized_text)
@@ -313,8 +314,9 @@ class ADH:
 
     def normalize_subdiv_name_un_accented(self, input_text):
         # Remove non-alphanumeric characters and convert to lowercase
-        normalized_text = re.sub(r'[^a-zA-Z0-9]+', ' ', input_text.lower())
-        print(normalized_text)
+        #BUG: normalized_text = re.sub(r'[^a-zA-Z0-9]+', ' ', input_text.lower())
+        normalized_text = input_text.lower()
+        #print(normalized_text)
 
         # Extract the division prefix and number
         match = re.match(r'([a-z]+)\s*(\d+)', normalized_text)

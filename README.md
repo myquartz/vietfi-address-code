@@ -70,6 +70,8 @@ Tests are defined in the `tests` folder in this project. Use PIP to install the 
 $ pip3.9 install -r tests/requirements.txt --user
 # unit test
 $ python3.9 -m pytest tests/unit -v
+# or running in debug mode with port
+$ python3.9 -m debugpy --wait-for-client --listen 5678 -m pytest tests/unit
 # integration test, requiring deploying the stack first.
 # Create the env variable AWS_SAM_STACK_NAME with the name of the stack we are testing
 $ AWS_SAM_STACK_NAME=vietfi-address-code python -m pytest tests/integration -v

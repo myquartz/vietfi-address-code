@@ -185,8 +185,8 @@ def post_address_parser(event, context):
 
     if address_text is None:
         return {
-            statusCode: 400,
-            body: json.dumps({
+            "statusCode": 400,
+            "body": json.dumps({
                 "message": "address_text is required in JSON object"
             })
         }
