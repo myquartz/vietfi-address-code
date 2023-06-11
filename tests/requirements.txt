@@ -1,6 +1,6 @@
 pytest
 boto3
-#requests
+requests
 pyyaml
 unicode
 unidecode

@@ -291,7 +291,7 @@ jobs:
       - run: |
           # integration test
           pip install -r tests/requirements.txt
-          python -m pytest tests/integration
+          env AWS_SAM_STACK_NAME=${TESTING_STACK_NAME} python -m pytest tests/integration
 
   deploy-prod:
     if: github.ref == 'refs/heads/main'
