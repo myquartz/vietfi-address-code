@@ -27,8 +27,9 @@
               data-bs-toggle="tab" data-bs-target="#specification-tab-pane" role="tab" aria-controls="specification-tab-pane">API Specification</a>
         </li>
       </ul>
+      
       <div class="tab-content" id="myTabContent">
-      <form name="cdv" id="selection-tab-pane" onsubmit="return show_core_hierachy(this)"
+      <form name="cdv" id="selection-tab-pane" onsubmit="return show_code_hierachy(this)"
         class="tab-pane fade show active" role="tabpanel" aria-labelledby="selection-tab" tabindex="0">
         <div class="mb-3">
           <label for="countrySelect" class="form-label">Country</label>
@@ -61,18 +62,18 @@
           <div id="subDivisionCode" class="form-text">Listing Level 2 Sub-Division in Sub-Division code: <span></span></div>
         </div>
         <div class="mb-3" id="selection_result">
-         Finally you have a hierachy codes: <span></span>
+         After click button, you have a hierachy of codes: <span></span>
         </div>
-        <button type="submit" onclick="return viewHierachy(document.cdv)" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-primary">Submit</button>
       </form>
       
-      <form name="atv" onsubmit="return address_detect(this)"  id="selection-tab-pane"
-        class="tab-pane fade" role="tabpanel" aria-labelledby="selection-tab" tabindex="0">
+      <form name="atv" onsubmit="return address_detect(this)"  id="guessing-tab-pane"
+        class="tab-pane fade" role="tabpanel" aria-labelledby="guessing-tab" tabindex="0">
         <div class="mb-3">
-          <label for="addressText" class="form-label">Address text</label>
+          <label for="addressText" class="form-label">Address String</label>
           <input id="addressText" name="adt" required="yes" class="form-control">
           
-          <div id="countryHelp" class="form-text">Please enter your address text like "10 Lý quốc sư, phường Hàng Trống, Hoàn Kiếm, Hà Nội" </div>
+          <div id="countryHelp" class="form-text">Please enter an address text likes "10 Lý quốc sư, phường Hàng Trống, Hoàn Kiếm, Hà Nội" </div>
         </div>
 
         <ul class="list-group">
@@ -89,8 +90,8 @@
           class="btn btn-success">Guess</button>
       </form>
 
-      <div id="selection-tab-pane"
-        class="tab-pane fade" role="tabpanel" aria-labelledby="selection-tab" tabindex="0">
+      <div id="specification-tab-pane"
+        class="tab-pane fade" role="tabpanel" aria-labelledby="specification-tab" tabindex="0">
         
       </div>
       </div><!-- of tab content -->
@@ -225,11 +226,11 @@
           document.getElementById('divisionSelect').length = 1;
         }
 
-      function viewHierachy(f) {
-        jquery('#selection_result span').text(JSON.stringify([document.cdv.elements[0].value,
-                                                         document.cdv.elements[1].value,
-                                                         document.cdv.elements[2].value,
-                                                         document.cdv.elements[3].value])); 
+      function show_code_hierachy(f) {
+        jquery('#selection_result span').text(JSON.stringify([f.elements[0].value,
+                                                         f.elements[1].value,
+                                                         f.elements[2].value,
+                                                         f.elements[3].value])); 
         return false;
       }
       
