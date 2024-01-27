@@ -131,7 +131,9 @@
       }
       
       function selectCountry(elm) {
+        jQuery('#countryCode span').text(elm.value);
         if(elm.value) {
+          jQuery('#countryCode span').text(elm.value);
           fetch(apiURL+"/countries/"+elm.value+"/divisions")
             .then(function(resp) {
               if(resp.status != 200)
@@ -165,6 +167,7 @@
       }
 
       function selectDivision(ctry, elm) {
+        jQuery('#divisionCode span').text(elm.value);
         if(elm.value) {
           fetch(apiURL+"/countries/"+ctry+"/divisions/"+elm.value+"/subdivisions")
             .then(function(resp) {
@@ -197,6 +200,7 @@
       }
 
       function selectSubDivision(ctry, div, elm) {
+        jQuery('#subDivisionCode span').text(elm.value);
         if(elm.value) {
           fetch(apiURL+"/countries/"+ctry+"/divisions/"+div+"/subdivisions/"+elm.value+"/l2subdivisions")
             .then(function(resp) {
