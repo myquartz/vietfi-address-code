@@ -126,7 +126,7 @@
             });
         })
         .catch(function(e) {
-          jquery('#selection_result span').text(JSON.stringify(e));
+          jQuery('#selection_result span').text(JSON.stringify(e));
         });
       }
       
@@ -156,7 +156,7 @@
               });
             })
             .catch(function(e) {
-              jquery('#selection_result span').text(JSON.stringify(e));
+              jQuery('#selection_result span').text(JSON.stringify(e));
             });
         }
         else
@@ -188,7 +188,7 @@
               });
             })
             .catch(function(e) {
-              jquery('#selection_result span').text(JSON.stringify(e));
+              jQuery('#selection_result span').text(JSON.stringify(e));
             });
         }
         else
@@ -218,7 +218,7 @@
               });
             })
             .catch(function(e) {
-              jquery('#selection_result span').text(JSON.stringify(e));
+              jQuery('#selection_result span').text(JSON.stringify(e));
             });
         }
         else
@@ -227,7 +227,7 @@
         }
 
       function show_code_hierachy(f) {
-        jquery('#selection_result span').text(JSON.stringify([f.elements[0].value,
+        jQuery('#selection_result span').text(JSON.stringify([f.elements[0].value,
                                                          f.elements[1].value,
                                                          f.elements[2].value,
                                                          f.elements[3].value])); 
@@ -236,11 +236,11 @@
       
       function address_detect(f) {
         if(f.adt) {
-          jquery('#g_country_code strong').text('');
-          jquery('#g_division strong').text('').siblings().first('');
-          jquery('#g_subdivision strong').text('').siblings().first('');
-          jquery('#g_l2subdivision strong').text('').siblings().first('');
-          jquery('#g_address span').text('');
+          jQuery('#g_country_code strong').text('');
+          jQuery('#g_division strong').text('').siblings().first('');
+          jQuery('#g_subdivision strong').text('').siblings().first('');
+          jQuery('#g_l2subdivision strong').text('').siblings().first('');
+          jQuery('#g_address span').text('');
           
           fetch(apiURL+"/address",{ method: "post", mode:"cors",headers:
                                    {"Content-type":"application/json"},
@@ -251,16 +251,16 @@
               return resp.json();
             })
             .then(function(data) {
-              $jquery('#atv_result').text(JSON.stringify(data));
-              jquery('#g_country_code strong').text(data.country_code);
-              jquery('#g_division strong').text(data.division_iso + ' '+data.division_gso).siblings().first(data.division_name);
-              jquery('#g_subdivision strong').text(data.subdiv_code).siblings().first(subdiv_name);
-              jquery('#g_l2subdivision strong').text(data.l2subdiv_code).siblings().first(data.l2subdiv_name);
-              jquery('#g_address span').text(data.address_line);
+              jQuery('#atv_result').text(JSON.stringify(data));
+              jQuery('#g_country_code strong').text(data.country_code);
+              jQuery('#g_division strong').text(data.division_iso + ' '+data.division_gso).siblings().first(data.division_name);
+              jQuery('#g_subdivision strong').text(data.subdiv_code).siblings().first(subdiv_name);
+              jQuery('#g_l2subdivision strong').text(data.l2subdiv_code).siblings().first(data.l2subdiv_name);
+              jQuery('#g_address span').text(data.address_line);
             })
             .catch(function(e) {
               //alert(e);
-              jquery('#atv_result').text = JSON.stringify(e);
+              jQuery('#atv_result').text = JSON.stringify(e);
             });
         }
         return false;
