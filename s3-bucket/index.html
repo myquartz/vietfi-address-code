@@ -11,8 +11,25 @@
     <div class="container">
       <!-- Content here -->
       <h1>Hello, This is Geographic Hierachy Code Demo!</h1>
-      <p>We currently support for Vietnam's Division only (Select Viet Nam in the list)</p>
-      <form name="cdv">
+      <p>Our dataset currently supports for Vietnam's Division and limited for Singapore, Thailan, Cambodia and Laos</p>
+
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#" 
+              data-bs-toggle="tab" data-bs-target="#selection-tab-pane" role="tab" aria-controls="selection-tab-pane" aria-selected="true">Hierachy Section</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#"
+              data-bs-toggle="tab" data-bs-target="#guessing-tab-pane" role="tab" aria-controls="guessing-tab-pane">Code Guessing</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#"
+              data-bs-toggle="tab" data-bs-target="#specification-tab-pane" role="tab" aria-controls="specification-tab-pane">API Specification</a>
+        </li>
+      </ul>
+      <div class="tab-content" id="myTabContent">
+      <form name="cdv" id="selection-tab-pane" onsubmit="return show_core_hierachy(this)"
+        class="tab-pane fade show active" role="tabpanel" aria-labelledby="selection-tab" tabindex="0">
         <div class="mb-3">
           <label for="countrySelect" class="form-label">Country</label>
           <select id="countrySelect" class="form-select" aria-label="Country selection" onchange="selectCountry(this)">
@@ -26,6 +43,7 @@
             onchange="selectDivision(document.getElementById('countrySelect').value, this)">
             <option value="" selected>- select country first -</option>
           </select>
+          <div id="countryCode" class="form-text">Listing Division in country code: <span></span></div>
         </div>
         <div class="mb-3">
           <label for="subDivSelect" class="form-label">Sub Division</label>
@@ -33,37 +51,58 @@
           onchange="selectSubDivision(document.getElementById('countrySelect').value, document.getElementById('divisionSelect').value, this)">
             <option value="" selected>- select division please -</option>
           </select>
+          <div id="divisionCode" class="form-text">Listing Sub-Division in Division code: <span></span></div>
         </div>
         <div class="mb-3">
           <label for="l2SubDivSelect" class="form-label">Level 2 Sub Division</label>
           <select id="l2SubDivSelect" class="form-select" aria-label="Level 2 Sub division selection">
             <option value="" selected>- select sub division please -</option>
           </select>
+          <div id="subDivisionCode" class="form-text">Listing Level 2 Sub-Division in Sub-Division code: <span></span></div>
         </div>
-        <button type="submit" onclick="alert('You selected '+JSON.stringify([document.cdv.elements[0].value,document.cdv.elements[1].value,document.cdv.elements[2].value,document.cdv.elements[3].value])); return false" 
-          class="btn btn-primary">Submit</button>
+        <div class="mb-3" id="selection_result">
+         Finally you have a hierachy codes: <span></span>
+        </div>
+        <button type="submit" onclick="return viewHierachy(document.cdv)" class="btn btn-primary">Submit</button>
       </form>
-      <form name="atv" onsubmit="return address_detect(this)">
+      
+      <form name="atv" onsubmit="return address_detect(this)"  id="selection-tab-pane"
+        class="tab-pane fade" role="tabpanel" aria-labelledby="selection-tab" tabindex="0">
         <div class="mb-3">
           <label for="addressText" class="form-label">Address text</label>
           <input id="addressText" name="adt" required="yes" class="form-control">
           
           <div id="countryHelp" class="form-text">Please enter your address text like "10 Lý quốc sư, phường Hàng Trống, Hoàn Kiếm, Hà Nội" </div>
         </div>
-        
+
+        <ul class="list-group">
+          <li class="list-group-item" id="g_country_code">Country code (ISO) <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_division">Division code (ISO and GSO) <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_subdivision">Sub Division (GSO) <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_l2subdivision">L2 Sub division (GSO) <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_address">Address Line: <span></span></li>
+        </ul>
         <div class="mb-3" id="atv_result">
          Result here
         </div>
         <button type="submit"
           class="btn btn-success">Guess</button>
       </form>
-      
+
+      <div id="selection-tab-pane"
+        class="tab-pane fade" role="tabpanel" aria-labelledby="selection-tab" tabindex="0">
+        
+      </div>
+      </div><!-- of tab content -->
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" 
       integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
     <script>
-      var apiURL = '{API_URL}' != '' ? '{API_URL}' : 'https://su790ai499.execute-api.ap-southeast-1.amazonaws.com/Prod';
+      var apiURL = '{API_URL}';
+      if(apiURL == '' || apiURL.substr(0,1) == '{' && apiURL.indexOf('API_URL')>0)
+        apiURL = 'https://api.vietfi.net/address/v1';
       
       function onLoad() {
         fetch(apiURL+"/countries")
@@ -86,7 +125,7 @@
             });
         })
         .catch(function(e) {
-          alert(e);
+          jquery('#selection_result span').text(JSON.stringify(e));
         });
       }
       
@@ -116,8 +155,7 @@
               });
             })
             .catch(function(e) {
-              //alert(e);
-
+              jquery('#selection_result span').text(JSON.stringify(e));
             });
         }
         else
@@ -149,8 +187,7 @@
               });
             })
             .catch(function(e) {
-              //alert(e);
-
+              jquery('#selection_result span').text(JSON.stringify(e));
             });
         }
         else
@@ -180,16 +217,30 @@
               });
             })
             .catch(function(e) {
-              //alert(e);
+              jquery('#selection_result span').text(JSON.stringify(e));
             });
         }
         else
-        //clear all except first item
+          //clear all except first item
           document.getElementById('divisionSelect').length = 1;
         }
 
+      function viewHierachy(f) {
+        jquery('#selection_result span').text(JSON.stringify([document.cdv.elements[0].value,
+                                                         document.cdv.elements[1].value,
+                                                         document.cdv.elements[2].value,
+                                                         document.cdv.elements[3].value])); 
+        return false;
+      }
+      
       function address_detect(f) {
         if(f.adt) {
+          jquery('#g_country_code strong').text('');
+          jquery('#g_division strong').text('').siblings().first('');
+          jquery('#g_subdivision strong').text('').siblings().first('');
+          jquery('#g_l2subdivision strong').text('').siblings().first('');
+          jquery('#g_address span').text('');
+          
           fetch(apiURL+"/address",{ method: "post", mode:"cors",headers:
                                    {"Content-type":"application/json"},
                                    body: JSON.stringify({address_text: f.adt.value})})
@@ -199,14 +250,16 @@
               return resp.json();
             })
             .then(function(data) {
-              var elm = document.getElementById('atv_result');
-               elm.innerText = JSON.stringify(data);
-             
+              $jquery('#atv_result').text(JSON.stringify(data));
+              jquery('#g_country_code strong').text(data.country_code);
+              jquery('#g_division strong').text(data.division_iso + ' '+data.division_gso).siblings().first(data.division_name);
+              jquery('#g_subdivision strong').text(data.subdiv_code).siblings().first(subdiv_name);
+              jquery('#g_l2subdivision strong').text(data.l2subdiv_code).siblings().first(data.l2subdiv_name);
+              jquery('#g_address span').text(data.address_line);
             })
             .catch(function(e) {
               //alert(e);
-var elm = document.getElementById('atv_result');
-               elm.innerText = e;
+              jquery('#atv_result').text = JSON.stringify(e);
             });
         }
         return false;
