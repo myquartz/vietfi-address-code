@@ -258,7 +258,7 @@
               jQuery('#atv_result').text(JSON.stringify(data));
               jQuery('#g_country_code strong').text(data.country_code);
               jQuery('#g_division strong').text(data.division_iso + ' '+data.division_gso).next().text(data.division_name);
-              jQuery('#g_subdivision strong').text(data.subdiv_code).next().text(subdiv_name);
+              jQuery('#g_subdivision strong').text(data.subdiv_code).next().text(data.subdiv_name);
               jQuery('#g_l2subdivision strong').text(data.l2subdiv_code).next().text(data.l2subdiv_name);
               jQuery('#g_address span').text(data.address_line);
             })
