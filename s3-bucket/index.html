@@ -237,9 +237,9 @@
       function address_detect(f) {
         if(f.adt) {
           jQuery('#g_country_code strong').text('');
-          jQuery('#g_division strong').text('').siblings().first('');
-          jQuery('#g_subdivision strong').text('').siblings().first('');
-          jQuery('#g_l2subdivision strong').text('').siblings().first('');
+          jQuery('#g_division strong').text('').next().text('');
+          jQuery('#g_subdivision strong').text('').next().text('');
+          jQuery('#g_l2subdivision strong').text('').next().text('');
           jQuery('#g_address span').text('');
           
           fetch(apiURL+"/address",{ method: "post", mode:"cors",headers:
@@ -253,9 +253,9 @@
             .then(function(data) {
               jQuery('#atv_result').text(JSON.stringify(data));
               jQuery('#g_country_code strong').text(data.country_code);
-              jQuery('#g_division strong').text(data.division_iso + ' '+data.division_gso).siblings().first(data.division_name);
-              jQuery('#g_subdivision strong').text(data.subdiv_code).siblings().first(subdiv_name);
-              jQuery('#g_l2subdivision strong').text(data.l2subdiv_code).siblings().first(data.l2subdiv_name);
+              jQuery('#g_division strong').text(data.division_iso + ' '+data.division_gso).next().text(data.division_name);
+              jQuery('#g_subdivision strong').text(data.subdiv_code).next().text(subdiv_name);
+              jQuery('#g_l2subdivision strong').text(data.l2subdiv_code).next().text(data.l2subdiv_name);
               jQuery('#g_address span').text(data.address_line);
             })
             .catch(function(e) {
