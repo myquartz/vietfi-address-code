@@ -14,19 +14,19 @@ env:
   PIPELINE_USER_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   PIPELINE_USER_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   SAM_TEMPLATE: template.yaml
-  TESTING_STACK_NAME: vietfi-address-code
-  TESTING_PIPELINE_EXECUTION_ROLE: arn:aws:iam::722273251097:role/aws-sam-cli-managed-address-PipelineExecutionRole-MXX3CITQG890
-  TESTING_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::722273251097:role/aws-sam-cli-managed-addre-CloudFormationExecutionR-1119BYRZD48LW
-  TESTING_ARTIFACTS_BUCKET: aws-sam-cli-managed-default-samclisourcebucket-12bim3a7zr6k3
+  TESTING_STACK_NAME: vietfi-address-test
+  TESTING_PIPELINE_EXECUTION_ROLE: arn:aws:iam::722273251097:role/aws-sam-cli-managed-vietfi-ad-PipelineExecutionRole-waGBP6EtgRWp
+  TESTING_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::722273251097:role/aws-sam-cli-managed-vietf-CloudFormationExecutionRo-l86fNHOtrbeR
+  TESTING_ARTIFACTS_BUCKET: aws-sam-cli-managed-vietfi-address-artifactsbucket-nok96lbkkcks
   # If there are functions with "Image" PackageType in your template,
   # uncomment the line below and add "--image-repository ${TESTING_IMAGE_REPOSITORY}" to
   # testing "sam package" and "sam deploy" commands.
   # TESTING_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
   TESTING_REGION: ap-southeast-1
-  PROD_STACK_NAME: address-code-deploy
-  PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::722273251097:role/aws-sam-cli-managed-address-PipelineExecutionRole-MXX3CITQG890
-  PROD_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::722273251097:role/aws-sam-cli-managed-addre-CloudFormationExecutionR-1119BYRZD48LW
-  PROD_ARTIFACTS_BUCKET: aws-sam-cli-managed-address-code-artifactsbucket-6qx00f8vh2o1
+  PROD_STACK_NAME: vietfi-address-prod
+  PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::722273251097:role/aws-sam-cli-managed-vietfi-ad-PipelineExecutionRole-waGBP6EtgRWp
+  PROD_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::722273251097:role/aws-sam-cli-managed-vietf-CloudFormationExecutionRo-l86fNHOtrbeR
+  PROD_ARTIFACTS_BUCKET: aws-sam-cli-managed-vietfi-address-artifactsbucket-nok96lbkkcks
   # If there are functions with "Image" PackageType in your template,
   # uncomment the line below and add "--image-repository ${PROD_IMAGE_REPOSITORY}" to
   # prod "sam package" and "sam deploy" commands.
@@ -128,8 +128,8 @@ jobs:
           API_STAGE=$(aws cloudformation describe-stack-resources --stack-name ${FEATURE_STACK_NAME} \
             --query '(StackResources[?LogicalResourceId==`AddressCodeApiProdStage`].PhysicalResourceId)[0]')
           API_URL=https://${API_HOST//\"/}.execute-api.${TESTING_REGION}.amazonaws.com/${API_STAGE//\"/}
-          sed 's|{API_URL}|'$API_URL'|g' s3-bucket/index.html > demo.html
-          aws s3 cp demo.html s3://${TESTING_S3_BUCKET}/${FEATURE_STACK_NAME}.html
+          sed 's|{API_URL}|'$API_URL'|g' s3-bucket/index.html > feature.html
+          aws s3 cp feature.html s3://${TESTING_S3_BUCKET}/${FEATURE_STACK_NAME}.html
           aws s3api put-object-acl --bucket ${TESTING_S3_BUCKET} --key ${FEATURE_STACK_NAME}.html --acl public-read
 
   build-and-deploy-bug:
@@ -171,8 +171,8 @@ jobs:
           API_STAGE=$(aws cloudformation describe-stack-resources --stack-name ${TESTING_STACK_NAME} \
             --query '(StackResources[?LogicalResourceId==`AddressCodeApiProdStage`].PhysicalResourceId)[0]')
           API_URL=https://${API_HOST//\"/}.execute-api.${TESTING_REGION}.amazonaws.com/${API_STAGE//\"/}
-          sed 's|{API_URL}|'$API_URL'|g' s3-bucket/index.html > demo.html
-          aws s3 cp demo.html s3://${TESTING_S3_BUCKET}/testing.html
+          sed 's|{API_URL}|'$API_URL'|g' s3-bucket/index.html > temp.html
+          aws s3 cp temp.html s3://${TESTING_S3_BUCKET}/testing.html
           aws s3api put-object-acl --bucket ${TESTING_S3_BUCKET} --key testing.html --acl public-read
 
   build-and-package:
