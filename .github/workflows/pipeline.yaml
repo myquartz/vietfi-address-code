@@ -23,6 +23,8 @@ env:
   # testing "sam package" and "sam deploy" commands.
   # TESTING_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
   TESTING_REGION: ap-southeast-1
+  TESTING_S3_BUCKET: vietfi-api-data
+  # Production information
   PROD_STACK_NAME: vietfi-address-prod
   PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::722273251097:role/aws-sam-cli-managed-vietfi-ad-PipelineExecutionRole-waGBP6EtgRWp
   PROD_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::722273251097:role/aws-sam-cli-managed-vietf-CloudFormationExecutionRo-l86fNHOtrbeR
@@ -32,7 +34,8 @@ env:
   # prod "sam package" and "sam deploy" commands.
   # PROD_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
   PROD_REGION: ap-southeast-1
-  TESTING_S3_BUCKET: vietfi-api-data
+  PROD_S3_BUCKET: vietfi-api-data
+  PROD_API_URL: https://api.vietfi.net/address/v1
 
 jobs:
   test:
@@ -122,7 +125,7 @@ jobs:
       - name: Generate HTML Demo Page
         shell: bash
         run: |
-          FEATURE_STACK_NAME=$(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-]')
+          FEATURE_STACK_NAME=$(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-_]')
           API_HOST=$(aws cloudformation describe-stack-resources --stack-name ${FEATURE_STACK_NAME} \
             --query '(StackResources[?LogicalResourceId==`AddressCodeApi`].PhysicalResourceId)[0]')
           API_STAGE=$(aws cloudformation describe-stack-resources --stack-name ${FEATURE_STACK_NAME} \
@@ -166,14 +169,15 @@ jobs:
       - name: Generate HTML Demo Page
         shell: bash
         run: |
+          BUG_STACK_NAME=$(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-_]')
           API_HOST=$(aws cloudformation describe-stack-resources --stack-name ${TESTING_STACK_NAME} \
             --query '(StackResources[?LogicalResourceId==`AddressCodeApi`].PhysicalResourceId)[0]')
           API_STAGE=$(aws cloudformation describe-stack-resources --stack-name ${TESTING_STACK_NAME} \
             --query '(StackResources[?LogicalResourceId==`AddressCodeApiProdStage`].PhysicalResourceId)[0]')
           API_URL=https://${API_HOST//\"/}.execute-api.${TESTING_REGION}.amazonaws.com/${API_STAGE//\"/}
           sed 's|{API_URL}|'$API_URL'|g' s3-bucket/index.html > temp.html
-          aws s3 cp temp.html s3://${TESTING_S3_BUCKET}/testing.html
-          aws s3api put-object-acl --bucket ${TESTING_S3_BUCKET} --key testing.html --acl public-read
+          aws s3 cp temp.html s3://${TESTING_S3_BUCKET}/${BUG_STACK_NAME}.html
+          aws s3api put-object-acl --bucket ${TESTING_S3_BUCKET} --key ${BUG_STACK_NAME}.html --acl public-read
 
   build-and-package:
     if: github.ref == 'refs/heads/main'
@@ -267,6 +271,17 @@ jobs:
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
             --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
+      - name: Generate HTML Demo Page
+        shell: bash
+        run: |
+          API_HOST=$(aws cloudformation describe-stack-resources --stack-name ${TESTING_STACK_NAME} \
+            --query '(StackResources[?LogicalResourceId==`AddressCodeApi`].PhysicalResourceId)[0]')
+          API_STAGE=$(aws cloudformation describe-stack-resources --stack-name ${TESTING_STACK_NAME} \
+            --query '(StackResources[?LogicalResourceId==`AddressCodeApiProdStage`].PhysicalResourceId)[0]')
+          API_URL=https://${API_HOST//\"/}.execute-api.${TESTING_REGION}.amazonaws.com/${API_STAGE//\"/}
+          sed 's|{API_URL}|'$API_URL'|g' s3-bucket/index.html > temp.html
+          aws s3 cp temp.html s3://${TESTING_S3_BUCKET}/testing.html
+          aws s3api put-object-acl --bucket ${TESTING_S3_BUCKET} --key testing.html --acl public-read
 
   integration-test:
     if: github.ref == 'refs/heads/main'
@@ -332,6 +347,6 @@ jobs:
       - name: Generate HTML Demo Page
         shell: bash
         run: |            
-          sed 's|{API_URL}|'$API_URL'|g' s3-bucket/index.html > prod.html
-          aws s3 cp prod.html s3://${TESTING_S3_BUCKET}/index.html
-          aws s3api put-object-acl --bucket ${TESTING_S3_BUCKET} --key index.html --acl public-read
+          sed 's|{API_URL}|'${PROD_API_URL}'|g' s3-bucket/index.html > prod.html
+          aws s3 cp prod.html s3://${PROD_S3_BUCKET}/index.html
+          aws s3api put-object-acl --bucket ${PROD_S3_BUCKET} --key index.html --acl public-read
