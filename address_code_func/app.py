@@ -111,7 +111,8 @@ def get_divisions(event,context):
     resource = event['resource']
     isEndWithSubdiv = resource.endswith('/divisions')
     iso_code = event['pathParameters']['iso_code']
-    division_code = event['pathParameters']['division_code']
+    if 'division_code' in event['pathParameters']:
+        division_code = event['pathParameters']['division_code']
     params = (iso_code,)
     sqlstatement = "SELECT a.division_cd, a.division_name, a.country_iso3, local_id \
             FROM sys_division a \
@@ -352,6 +353,7 @@ def lambda_handler(event, context):
                 })
             }
     except Exception as err:
+        context.fail(str(err)+ ", event: " + str(event))
         return {
             "statusCode": 500,
             "body": json.dumps({
