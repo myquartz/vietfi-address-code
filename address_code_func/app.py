@@ -71,6 +71,7 @@ headers = {
     "Content-Type": "application/json"
 }
 
+total = 0
 
 # define API request handlers
 def get_countries(event,context):
@@ -336,9 +337,10 @@ api_routes = {
 def lambda_handler(event, context):
     global corsAllow
     global dbcon
+    global total
 
-    total = 0
     cur = dbconn.cursor()
+    total += 1
     try:
         # Routing by resource and method
         # See Event document above
@@ -350,7 +352,7 @@ def lambda_handler(event, context):
                 "X-Count": str(total),
                 "access-control-allow-origin": corsAllow.strip("'\" "),
                 "access-control-allow-headers": 'Accept,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                "access-control-allow-methods": 'GET, POST, PUT, DELETE',
+                "access-control-allow-methods": 'GET, POST',
                 "access-control-max-age": '3600'
             }
         else:
@@ -365,6 +367,7 @@ def lambda_handler(event, context):
             else:
                 return {
                     "statusCode": 405,
+                    "headers": headers,
                     "body": json.dumps({
                         "message": f"Method {method} not allowed"
                     })
@@ -372,6 +375,7 @@ def lambda_handler(event, context):
         else:
             return {
                 "statusCode": 404,
+                "headers": headers,
                 "body": json.dumps({
                     "message": "Resource not found"
                 })
@@ -380,6 +384,7 @@ def lambda_handler(event, context):
         logging.exception(str(err)+ ", event: " + str(event))
         return {
             "statusCode": 500,
+            "headers": headers,
             "body": json.dumps({
                 "message": "Error: " + str(err)
             }),
