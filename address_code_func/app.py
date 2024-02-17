@@ -120,10 +120,10 @@ def get_divisions(event,context):
         division_code = event['pathParameters']['division_code']
     params = (iso_code,)
     sqlstatement = "SELECT a.division_cd, a.division_name, a.country_iso3, local_id \
-            FROM sys_division a \
+            , a.divisionid FROM sys_division a \
             WHERE a.country_iso3 = ?"
     if isEndWithSubdiv:
-        sqlstatement += "order by a.division_name"
+        sqlstatement += "order by a.divisionid"
     else:
         sqlstatement += " and a.division_cd = ?"
         params = (iso_code, division_code)
@@ -134,7 +134,7 @@ def get_divisions(event,context):
     if isEndWithSubdiv:
         data = [{ 
             "division_code": row[0], 
-            "name:": row[1],
+            "name": row[1],
             "country_iso3": row[2],
             "local_id": row[3]
             } for row in cur.fetchall()]
@@ -145,7 +145,7 @@ def get_divisions(event,context):
         else:
             data = {
                 "division_code": row[0], 
-                "name:": row[1],
+                "name": row[1],
                 "country_iso3": row[2],
                 "local_id": row[3]
             }
@@ -164,15 +164,16 @@ def get_subdivisions(event,context):
     isEndWithSubdiv = resource.endswith('/subdivisions')
     iso_code = event['pathParameters']['iso_code']
     division_code = event['pathParameters']['division_code']
-    subdiv_code = event['pathParameters']['subdiv_code']
+    if 'subdiv_code' in event['pathParameters']:
+        subdiv_code = event['pathParameters']['subdiv_code']
     params = (iso_code,division_code)
     sqlstatement = "select a.subdiv_cd, a.l2subdiv_cd, a.subdiv_name, b.division_code, b.country_iso3 \
-        from sys_division_sub a, sys_division b \
+        ,a.subdivid from sys_division_sub a, sys_division b \
         where a.divisionid = b.divisionid \
           and a.l2subdiv_cd = '00000' \
           and b.country_iso3 = ? and b.division_cd = ?"
     if isEndWithSubdiv:
-        sqlstatement += "order by a.subdiv_name"
+        sqlstatement += "order by a.subdivid"
     else:
         sqlstatement += " and a.subdiv_cd = ?"
         params = (iso_code,division_code,subdiv_code)
@@ -215,7 +216,8 @@ def get_l2subdivisions(event,context):
     iso_code = event['pathParameters']['iso_code']
     division_code = event['pathParameters']['division_code']
     subdiv_code = event['pathParameters']['subdiv_code']
-    l2subdiv_code = event['pathParameters']['l2subdiv_code']
+    if 'l2subdiv_code' in event['pathParameters']:
+        l2subdiv_code = event['pathParameters']['l2subdiv_code']
     params = (iso_code, division_code, subdiv_code,)
     sqlstatement = "select a.subdiv_cd, a.l2subdiv_cd, a.subdiv_name, b.division_code, b.country_iso3 \
         from sys_division_sub a, sys_division b \
