@@ -13,7 +13,7 @@ Manual setup:
 1. Create sqlite3 data file at local, create tables, index, data..
 2. Copy data file to AWS S3 
    by command (assume "vietfi-api-data" is Bucket Name): 
-   `aws s3 cp country-div-sub.db s3://vietfi-api-data/country-div-sub.db`
+   `aws s3 cp country-div-sub.db s3://vietfi-api-data/address_db.db`
 
 How this code works:
 
@@ -31,7 +31,7 @@ Refer to https://brianpfeil.com/post/aws-sam-local-invoke-with-lambda-role/
 DB_DIR = os.getenv('DB_DIR','/tmp')
 
 bucketName = os.getenv('BUCKET_NAME')
-objectName = os.getenv('DB_FILE_KEY', 'country_div_sub.sqlite3')
+objectName = os.getenv('DB_FILE_KEY', 'address_db.sqlite3')
 
 client = boto3.client('s3')
 if client is not None and bucketName is not None and not os.path.exists(DB_DIR + "/" + objectName):
@@ -71,18 +71,15 @@ headers = {
 }
 
 
-def toCodeNameObj(arr):
-    return {
-        "code": arr[0],
-        "name": arr[1]
-    }
-
 # define API request handlers
 def get_countries(event,context):
     global headers
     sqlstatement = "SELECT iso3 AS code, nicename AS name FROM sys_country ORDER BY iso3"
     row_cnt = cur.execute(sqlstatement)
-    data = json.dumps(list(map(toCodeNameObj, cur.fetchall())))
+    data = json.dumps(list(map(lambda row: {
+        "code": row[0],
+        "name": row[1]
+    }, cur.fetchall())))
     return {
         "statusCode": 200,
         "headers": headers,
@@ -95,85 +92,147 @@ def get_country_by_code(event,context):
     params = (iso_code,)
     sqlstatement = "SELECT iso3, nicename FROM sys_country WHERE iso3 = ?"
     row_cnt = cur.execute(sqlstatement, params)
-    data = [toCodeNameObj(row) for row in cur.fetchall()]
+    data = [{
+        "code": row[0],
+        "name": row[1]
+    } for row in cur.fetchall()]
     status_code = 200 if data else 404
 
     return {
         "statusCode": status_code,
         "headers": headers,
-        "body": json.dumps({
+        "body": json.dumps({ "error": {
             "message": "There are no such country with iso_code=" + iso_code,
-        }) if not data else json.dumps(data, ensure_ascii=False),
+        }}) if not data else json.dumps(data, ensure_ascii=False),
     }
 
-def get_divisions_by_country_code(event,context):
+def get_divisions(event,context):
     global headers
+    resource = event['resource']
+    isEndWithSubdiv = resource.endswith('/divisions')
     iso_code = event['pathParameters']['iso_code']
+    division_code = event['pathParameters']['division_code']
     params = (iso_code,)
-    sqlstatement = "SELECT a.division_cd, a.division_name \
-            FROM sys_division a, sys_country b \
-            WHERE a.countryid = b.countryid \
-            AND b.iso3 = ?"
+    sqlstatement = "SELECT a.division_cd, a.division_name, a.country_iso3, local_id \
+            FROM sys_division a \
+            WHERE a.country_iso3 = ?"
+    + "order by a.division_name" if isEndWithSubdiv else " and a.division_cd = ?"
+    if not isEndWithSubdiv:
+        params.append(division_code)
     row_cnt = cur.execute(sqlstatement, params)
-    data = [toCodeNameObj(row) for row in cur.fetchall()]
-    status_code = 200 if data else 404
+    data = None
+    if isEndWithSubdiv:
+        row = cur.fetchone()
+        status_code = 200 if row else 404
+        data = {
+            "division_code": row[0], 
+            "name:": row[1],
+            "country_iso3": row[2],
+            "local_id": row[3]
+        }
+    else:
+        data = [{ 
+            "division_code": row[0], 
+            "name:": row[1],
+            "country_iso3": row[2],
+            "local_id": row[3]
+            } for row in cur.fetchall()]
+    
     return {
         "statusCode": status_code,
         "headers": headers,
-        "body": json.dumps({
-            "message": "There are no divivisons under country with iso_code=" + iso_code,
-        }) if not data else json.dumps(data, ensure_ascii=False),
+        "body": json.dumps({ "error": {
+            "message": "There are no division under country with iso_code=" + iso_code,
+        }}) if not data else json.dumps(data, ensure_ascii=False),
     }
 
 def get_subdivisions(event,context):
     global headers
+    resource = event['resource']
+    isEndWithSubdiv = resource.endswith('/subdivisions')
     iso_code = event['pathParameters']['iso_code']
     division_code = event['pathParameters']['division_code']
+    subdiv_code = event['pathParameters']['subdiv_code']
     params = (iso_code,division_code)
-    sqlstatement = "select a.subdiv_cd, a.subdiv_name \
-        from sys_division_sub a, sys_division b, sys_country c \
+    sqlstatement = "select a.subdiv_cd, a.l2subdiv_cd, a.subdiv_name, b.division_code, b.country_iso3 \
+        from sys_division_sub a, sys_division b \
         where a.divisionid = b.divisionid \
-          and b.countryid = c.countryid \
-          and a.subdiv_cd != '000' and a.l2subdiv_cd is null \
-          and c.iso3 = ? and b.division_cd = ? \
-          order by a.subdiv_name"
+          and a.l2subdiv_cd = '00000' \
+          and b.country_iso3 = ? and b.division_cd = ?"
+    + "order by a.subdiv_name" if isEndWithSubdiv else " and a.subdiv_cd = ?"
+    if not isEndWithSubdiv:
+        params.append(subdiv_code)
+
     row_cnt = cur.execute(sqlstatement, params)
-    data = [toCodeNameObj(row) for row in cur.fetchall()]
-    status_code = 200 if data else 404
+    data = None
+    if isEndWithSubdiv:
+        row = cur.fetchone()
+        status_code = 200 if row else 404
+        data = {
+            "local_id": row[0],
+            "name": row[2],
+            "division_code": row[3],
+            "country_code": row[4]
+        }
+    else:
+        data = [{
+            "local_id": row[0],
+            "name": row[2],
+            "division_code": row[3],
+            "country_code": row[4]
+        } for row in cur.fetchall()]
+
     return {
         "statusCode": status_code,
         "headers": headers,
-        "body": json.dumps({
-            "message": "Object not found for iso_code=" + iso_code + " and div_code="+division_code,
-        }) if not data else json.dumps(data, ensure_ascii=False),
+        "body": json.dumps({ "error": {
+            "message": "Object not found for country=" + iso_code + " and div_code="+division_code,
+        } }) if not data else json.dumps(data, ensure_ascii=False),
     }
 
 def get_l2subdivisions(event,context):
     global headers
+    resource = event['resource']
+    isEndWithSubdiv = resource.endswith('/l2subdivisions')
     iso_code = event['pathParameters']['iso_code']
     division_code = event['pathParameters']['division_code']
     subdiv_code = event['pathParameters']['subdiv_code']
+    l2subdiv_code = event['pathParameters']['l2subdiv_code']
     params = (iso_code, division_code, subdiv_code,)
-    sqlstatement = "select a.l2subdiv_cd, a.subdiv_name \
-        from sys_division_sub a, sys_division_sub b,sys_division c, sys_country d \
-        where a.subdiv_cd = b.subdiv_cd \
-          and b.divisionid = c.divisionid \
-          and c.countryid = d.countryid \
-          and b.subdiv_cd != '000' \
-          and b.l2subdiv_cd is null \
-          and a.l2subdiv_cd is not null \
-          and a.subdiv_cd = b.subdiv_cd \
-          and d.iso3 = ? and c.division_cd = ? and b.subdiv_cd = ? \
-          order by a.subdiv_name"
+    sqlstatement = "select a.subdiv_cd, a.l2subdiv_cd, a.subdiv_name, b.division_code, b.country_iso3 \
+        from sys_division_sub a, sys_division b \
+        where a.divisionid = b.divisionid \
+          and b.country_iso3 = ? and b.division_cd = ? and a.subdiv_cd = ?"
+    + "order by a.subdiv_name" if isEndWithSubdiv else " and a.l2subdiv_cd = ?"
+    if not isEndWithSubdiv:
+        params.append(l2subdiv_code)
     row_cnt = cur.execute(sqlstatement, params)
-    data = [toCodeNameObj(row) for row in cur.fetchall()]
-    status_code = 200 if data else 404
+    data = None
+    if isEndWithSubdiv:
+        row = cur.fetchone()
+        status_code = 200 if row else 404
+        data = {
+            "local_id": row[1],
+            "subdiv_local_id": row[0],
+            "name": row[2],
+            "division_code": row[3],
+            "country_code": row[4]
+        }
+    else:
+        data = [{
+            "local_id": row[1],
+            "subdiv_local_id": row[0],
+            "name": row[2],
+            "division_code": row[3],
+            "country_code": row[4]
+        } for row in cur.fetchall()]
+    
     return {
         "statusCode": status_code,
         "headers": headers,
-        "body": json.dumps({
-            "message": "Object not found for iso_code=" + iso_code + " and div_code="+division_code + "and subdiv_code=" + subdiv_code,
-        }) if not data else json.dumps(data, ensure_ascii=False),
+        "body": json.dumps({ "error": {
+            "message": "Object not found for country_code=" + iso_code + " and div_code="+division_code + "and subdiv_code=" + subdiv_code,
+        } }) if not data else json.dumps(data, ensure_ascii=False),
     }
 
 def post_address_parser(event, context):
@@ -226,12 +285,21 @@ api_routes = {
         'GET': get_country_by_code,
     },
     '/countries/{iso_code}/divisions': {
-        'GET': get_divisions_by_country_code,
+        'GET': get_divisions,
+    },
+    '/countries/{iso_code}/divisions/{division_code}': {
+         'GET': get_divisions,
     },
     '/countries/{iso_code}/divisions/{division_code}/subdivisions': {
          'GET': get_subdivisions,
     },
+    '/countries/{iso_code}/divisions/{division_code}/subdivisions/{subdiv_code}': {
+          'GET': get_subdivisions,
+    },
     '/countries/{iso_code}/divisions/{division_code}/subdivisions/{subdiv_code}/l2subdivisions': {
+          'GET': get_l2subdivisions,
+    },
+    '/countries/{iso_code}/divisions/{division_code}/subdivisions/{subdiv_code}/l2subdivisions/{l2subdiv_code}': {
           'GET': get_l2subdivisions,
     },
     '/address': {
@@ -243,16 +311,6 @@ api_routes = {
 def lambda_handler(event, context):
     global corsAllow
     global dbcon
-    """Sample pure Lambda function
-
-    Parameters
-    ----------
-    event: dict, required
-    context: object, required
-    Returns
-    ------
-    API Gateway Lambda Proxy Output Format: dict
-   """
 
     total = 0
     cur = dbconn.cursor()

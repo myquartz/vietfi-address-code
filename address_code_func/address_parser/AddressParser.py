@@ -16,14 +16,14 @@ class AP:
         data0 = {
             "country_code": "VNM",
             "division_name": "",
-            "division_iso": "",
-            "division_gso": "",
-            "division_id": 0,
-            "subdiv_code": "",
+            "division_code": "",
+            "division_local_id": "",
+            "subdiv_local_id": "",
             "subdiv_name": "",
-            "l2subdiv_code": "",
+            "l2subdiv_local_id": "",
             "l2subdiv_name": "",
             "address_line": "",
+            "probability": 1.0,
         }
 
         # Init AddressDictionary if not done yet.
@@ -62,7 +62,7 @@ class AP:
         
         if word_check in special_division:
             division_id = special_division[word_check]
-            sql = "SELECT divisionid, division_name, gso_code \
+            sql = "SELECT divisionid, division_name, local_id \
                     FROM sys_division WHERE divisionid = ?"
             params = (division_id,)
             cur.execute(sql, params)
@@ -75,9 +75,9 @@ class AP:
                 if division_code:
                     data['division_code'] = division_code
         else:
-            sql = "SELECT divisionid, division_cd, division_name, gso_code \
-                                    FROM sys_division JOIN sys_country USING(countryid) \
-                                    WHERE iso3 = ? AND division_name IN (?"
+            sql = "SELECT divisionid, division_cd, division_name, local_id \
+                                    FROM sys_division \
+                                    WHERE country_iso3 = ? AND division_name IN (?"
             
             plist = [self.adh.country_code, word_check]
             for key, value in self.adh.pre_map.items():
@@ -91,18 +91,18 @@ class AP:
             row = cur.fetchone()
             # print(row)
             if row:
-                division_id, division_iso, division_name, division_gso = row[0], row[1], row[2], row[3]
+                division_id, division_iso, division_name, division_local_id = row[0], row[1], row[2], row[3]
                 if division_name:
                     data['division_name'] = division_name
                     data['division_iso'] = division_iso
-                    data['division_gso'] = division_gso
+                    data['division_local_id'] = division_local_id
                     data['division_id'] = division_id
 
             else:
             # Try with non-accented string
-                sql = "SELECT divisionid, division_cd, division_name, gso_code \
-                        FROM sys_division JOIN sys_country USING(countryid) \
-                        WHERE iso3 = ? AND casefold(unidecode(division_name)) IN (?"
+                sql = "SELECT divisionid, division_cd, division_name, local_id \
+                        FROM sys_division \
+                        WHERE country_iso3 = ? AND casefold(unidecode(division_name)) IN (?"
                 # cur.execute(sql, params)
                 word_check = unidecode(word_check)
                 plist = [self.adh.country_code, word_check]
@@ -117,11 +117,11 @@ class AP:
                 row = cur.fetchone()
                 # print(row)
                 if row:
-                    division_id, division_iso, division_name, division_gso = row[0], row[1], row[2], row[3]
+                    division_id, division_iso, division_name, division_local_id = row[0], row[1], row[2], row[3]
                     if division_name:
                         data['division_name'] = division_name
                         data['division_iso'] = division_iso
-                        data['division_gso'] = division_gso
+                        data['division_local_id'] = division_local_id
                         data['division_id'] = division_id
 
         return data
@@ -134,7 +134,7 @@ class AP:
 
         data = self.data
         division_id = data["division_id"]
-        subdiv_code = data["subdiv_code"]
+        subdiv_code = data["subdiv_local_id"]
         if division_id == 0:
             return data
         
@@ -151,9 +151,9 @@ class AP:
             if row:
                 subdiv_code, l2subdiv_code = row[0], row[1]
                 if subdiv_code:
-                    data['subdiv_code'] = subdiv_code
+                    data['subdiv_local_id'] = subdiv_code
                 if l2subdiv_code:
-                    data['l2subdiv_code'] = l2subdiv_code
+                    data['l2subdiv_local_id'] = l2subdiv_code
                 subdiv_name = row[2]
                 if subdiv_name:
                     data['subdiv_name'] = subdiv_name
@@ -164,7 +164,7 @@ class AP:
             word_ext = self.adh.normalize_subdiv_name(word_check)
 
             sql = "SELECT subdiv_cd, subdiv_name FROM sys_division_sub \
-                    WHERE divisionid = ? AND l2subdiv_cd IS NULL \
+                    WHERE divisionid = ? AND l2subdiv_cd = '00000' \
                     AND subdiv_name IN (?,?"
 
             plist = [division_id, word_check, word_ext, ]
@@ -182,7 +182,7 @@ class AP:
             if row is not None:
                 subdiv_code = row[0]
                 if subdiv_code is not None:
-                    data["subdiv_code"] = subdiv_code
+                    data["subdiv_local_id"] = subdiv_code
                 n = row[1]
                 if n is not None:
                     data["subdiv_name"] = n
@@ -195,7 +195,7 @@ class AP:
                 word_ext = self.adh.normalize_subdiv_name_un_accented(word_check)
 
                 sql = "SELECT subdiv_cd, subdiv_name FROM sys_division_sub \
-                                        WHERE divisionid = ? AND l2subdiv_cd IS NULL \
+                                        WHERE divisionid = ? AND l2subdiv_cd = '00000' \
                                         AND casefold(unidecode(subdiv_name)) IN (?,?"
 
                 plist = [division_id, word_check, word_ext, ]
@@ -212,7 +212,7 @@ class AP:
                 if row is not None:
                     subdiv_code = row[0]
                     if subdiv_code is not None:
-                        data["subdiv_code"] = subdiv_code
+                        data["subdiv_local_id"] = subdiv_code
                     n = row[1]
                     if n is not None:
                         data["subdiv_name"] = n
@@ -258,7 +258,7 @@ class AP:
 
             # print("word_ext:", word_ext)
             sql = "SELECT l2subdiv_cd, subdiv_name FROM sys_division_sub \
-                    WHERE divisionid = ? AND l2subdiv_cd IS NOT NULL \
+                    WHERE divisionid = ? AND l2subdiv_cd <> '00000' \
                     AND subdiv_cd = ? \
                     AND subdiv_name IN(?,?"
 
@@ -292,7 +292,7 @@ class AP:
                 word_ext = self.adh.normalize_subdiv_name_un_accented(word_check)
 
                 sql = "SELECT l2subdiv_cd, subdiv_name FROM sys_division_sub \
-                                        WHERE divisionid = ? AND l2subdiv_cd IS NOT NULL \
+                                        WHERE divisionid = ? AND l2subdiv_cd <> '00000' \
                                         AND subdiv_cd = ? \
                                         AND casefold(unidecode(subdiv_name)) IN(?,?"
 
@@ -313,7 +313,7 @@ class AP:
                 if row:
                     l2subdiv_code = row[0]
                     if l2subdiv_code is not None:
-                        data["l2subdiv_code"] = l2subdiv_code
+                        data["l2subdiv_local_id"] = l2subdiv_code
                     l2subdiv_name = row[1]
                     if l2subdiv_name is not None:
                         data["l2subdiv_name"] = l2subdiv_name

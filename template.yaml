@@ -20,7 +20,7 @@ Parameters:
     Description: Bucket name for get DB File
   DataFileKey:
     Type: String
-    Default: "country_div_sub.sqlite3"
+    Default: "address_db.sqlite3"
   CorsAllowOrigin:
     Type: String
     Default: "'https://vietfi-api-data.s3.ap-southeast-1.amazonaws.com'"
@@ -31,7 +31,7 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       Description: "AddressCodeApi"
-      StageName: Prod
+      StageName: Stage
       Cors:
         AllowMethods: "'GET, POST, PUT, DELETE'"
         AllowHeaders: "'Accept,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
@@ -58,11 +58,9 @@ Resources:
               - s3:GetObject
               - s3:GetObjectVersion
               - s3:ListBucket
-              - s3:PutObject
             Resource: 
               - !Sub 'arn:aws:s3:::${BucketName}/*'
               - !Sub 'arn:aws:s3:::${BucketName}'
-
       Architectures:
         - x86_64
       Events:
@@ -84,17 +82,35 @@ Resources:
             RestApiId: !Ref AddressCodeApi
             Path: /countries/{iso_code}/divisions
             Method: get
+        DivisionGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AddressCodeApi
+            Path: /countries/{iso_code}/divisions/{division_code}
+            Method: get
         SubDivisionList:
           Type: Api
           Properties:
             RestApiId: !Ref AddressCodeApi
             Path: /countries/{iso_code}/divisions/{division_code}/subdivisions
             Method: get
+        SubDivisionGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AddressCodeApi
+            Path: /countries/{iso_code}/divisions/{division_code}/subdivisions/{subdiv_code}
+            Method: get
         L2SubDivisionList:
           Type: Api
           Properties:
             RestApiId: !Ref AddressCodeApi
             Path: /countries/{iso_code}/divisions/{division_code}/subdivisions/{subdiv_code}/l2subdivisions
+            Method: get
+        L2SubDivisionGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AddressCodeApi
+            Path: /countries/{iso_code}/divisions/{division_code}/subdivisions/{subdiv_code}/l2subdivisions/{l2subdiv_code}
             Method: get
         AddressTextParser:
           Type: Api
@@ -106,7 +122,7 @@ Resources:
 Outputs:
   AddressApi:
     Description: "API Gateway endpoint URL for Prod stage for AddressCodeFunction"
-    Value: !Sub "https://${AddressCodeApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+    Value: !Sub "https://${AddressCodeApi}.execute-api.${AWS::Region}.amazonaws.com/Stage/"
   AddressCodeFunction:
     Description: "Lambda Function ARN"
     Value: !GetAtt AddressCodeFunction.Arn

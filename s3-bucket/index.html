@@ -152,7 +152,7 @@
               elm.add(def);
               divisions.forEach(c => {
                 var opt = document.createElement('option');
-                opt.value = c.code;
+                opt.value = c.division_code;
                 opt.text = c.name;
                 elm.add(opt);
               });
@@ -185,7 +185,7 @@
               elm.add(def);
               subdivisions.forEach(c => {
                 var opt = document.createElement('option');
-                opt.value = c.code;
+                opt.value = c.local_id;
                 opt.text = c.name;
                 elm.add(opt);
               });
@@ -216,7 +216,7 @@
               elm.add(def);
               l2subdivisions.forEach(c => {
                 var opt = document.createElement('option');
-                opt.value = c.code;
+                opt.value = c.local_id;
                 opt.text = c.name;
                 elm.add(opt);
               });
@@ -257,9 +257,9 @@
             .then(function(data) {
               jQuery('#atv_result').text(JSON.stringify(data));
               jQuery('#g_country_code strong').text(data.country_code);
-              jQuery('#g_division strong').text(data.division_iso + ' '+data.division_gso).next().text(data.division_name);
-              jQuery('#g_subdivision strong').text(data.subdiv_code).next().text(data.subdiv_name);
-              jQuery('#g_l2subdivision strong').text(data.l2subdiv_code).next().text(data.l2subdiv_name);
+              jQuery('#g_division strong').text(data.division_iso + ' '+data.division_local_id).next().text(data.division_name);
+              jQuery('#g_subdivision strong').text(data.subdiv_local_id).next().text(data.subdiv_name);
+              jQuery('#g_l2subdivision strong').text(data.l2subdiv_local_id).next().text(data.l2subdiv_name);
               jQuery('#g_address span').text(data.address_line);
             })
             .catch(function(e) {

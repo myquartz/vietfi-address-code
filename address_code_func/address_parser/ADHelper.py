@@ -341,7 +341,9 @@ class ADH:
             sql = "Select divisionid, division_name \
                 From sys_division \
                 WHERE division_name LIKE '%-%' \
-                ORDER BY division_name"
+                UNION ALL \
+                Select divisionid, division_name \
+                From special_division"
             cur = self.conn.cursor()
             cur.execute(sql)
             for row in cur.fetchall():
@@ -349,8 +351,6 @@ class ADH:
                 division_name = unicodedata.normalize('NFD', row[1]).strip().replace('-', ' ').lower()
                 division_name = re.sub(r'\s+', ' ', division_name)
 
-                special_division[division_name] = division_id
-                # 2023-05-24 changed
                 special_division[division_name] = division_id
 
                 # if self.NORM_TINH in division_name:

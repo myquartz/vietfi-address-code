@@ -22,21 +22,30 @@ class TestAddressParser:
         data = {
             "country_code": "VNM",
             "division_name": "",
-            "division_gso": ""
+            "division_local_id": ""
         }
-        # origin_location = "Số 18/564/55/14\nNguyễn Văn Cừ, Gia Thụy, Long Biên, Hà Nội"
+        
         input_address = "Hồ Chí Minh"  # OK
         data = addr_parser.detect_division(input_address)
-        assert ("79" == data["division_gso"])
+        assert ("79" == data["division_local_id"])
         input_address = "TP. Hồ Chí Minh"   # OK
         data = addr_parser.detect_division(input_address)
-        assert ("79" == data["division_gso"])
+        assert ("79" == data["division_local_id"])
         input_address = "Thành phố Hồ Chí Minh"     # OK
         data = addr_parser.detect_division(input_address)
-        assert ("79" == data["division_gso"])
+        assert ("79" == data["division_local_id"])
         input_address = "TP Hồ Chí Minh"    # OK
         data = addr_parser.detect_division(input_address)
-        assert ("79" == data["division_gso"])
+        assert ("79" == data["division_local_id"])
+        input_address = "TP.HCM"    # OK
+        data = addr_parser.detect_division(input_address)
+        assert ("79" == data["division_local_id"])
+        input_address = "TP HCM"    # OK
+        data = addr_parser.detect_division(input_address)
+        assert ("79" == data["division_local_id"])
+        input_address = "HCMC"    # OK
+        data = addr_parser.detect_division(input_address)
+        assert ("79" == data["division_local_id"])
 
     def test_detect_division2(self) -> object:
         self.logger.info("#2. detect_division test - run 2")
@@ -45,7 +54,7 @@ class TestAddressParser:
         data = {
             "country_code": "VNM",
             "division_name": "",
-            "division_gso": ""
+            "division_local_id": ""
         }
 
         input_address = "Tỉnh Thái Bình"
@@ -61,7 +70,7 @@ class TestAddressParser:
             "error_message": error_message
         })
 
-        assert ("34" == addr_parser.data["division_gso"])
+        assert ("34" == addr_parser.data["division_local_id"])
 
     def test_detect_subdiv(self) -> object:
         self.logger.info("2. detect_subdiv test")
@@ -74,26 +83,26 @@ class TestAddressParser:
             "country_code": "VNM",
             "division_name": "",
             "division_iso": "VN-HN",
-            "division_gso": "01",
+            "division_local_id": "01",
             "division_id": 18,
-            "subdiv_code": "",
+            "subdiv_local_id": "",
             "subdiv_name": "",
-            "l2subdiv_code": "",
+            "l2subdiv_local_id": "",
             "l2subdiv_name": "",
         }
         # origin_location = "Số 18/564/55/14\nNguyễn Văn Cừ, Gia Thụy, Long Biên"
         origin_location = "Long Biên "  # OK
         data = addr_parser.detect_subdiv(origin_location)
-        assert ("004" == data["subdiv_code"])
+        assert ("004" == data["subdiv_local_id"])
         origin_location = "q. Long Biên "  # OK
         data = addr_parser.detect_subdiv(origin_location)
-        assert ("004" == data["subdiv_code"])
+        assert ("004" == data["subdiv_local_id"])
         origin_location = "Q Long Biên "  # OK
         origin_location = "Q Long Bien "  # OK
         origin_location = "Huyện Côn đảo" ## , Tỉnh Ba Ria - Vung Tau"
         origin_location = "H. CON DAO"  ## , Tỉnh Ba Ria - Vung Tau"
 
-        addr_parser.data.update({"division_gso": "77"})
+        addr_parser.data.update({"division_local_id": "77"})
         addr_parser.data["division_id"] = 2
 
         origin_location = " Vũng Tàu "
@@ -111,7 +120,7 @@ class TestAddressParser:
             "error_message": error_message
         })
 
-        assert ("747" == data["subdiv_code"])
+        assert ("747" == data["subdiv_local_id"])
 
     def test_detect_l2subdiv(self) -> object:
         # print("3. detect_l2subdiv")
@@ -123,11 +132,11 @@ class TestAddressParser:
         addr_parser.data = {
             "country_code": "VNM",
             "division_name": "TP. Hà Nội",
-            "division_gso": "01",
+            "division_local_id": "01",
             "division_id": 18,
-            "subdiv_code": "004",
+            "subdiv_local_id": "004",
             "subdiv_name": "Quận Long Biên",
-            "l2subdiv_code": "",
+            "l2subdiv_local_id": "",
             "l2subdiv_name": "",
         }
         origin_location = "p. Gia Thụy "
@@ -144,7 +153,7 @@ class TestAddressParser:
             "error_message": error_message
         })
 
-        assert ("004" == data["subdiv_code"])
+        assert ("004" == data["subdiv_local_id"])
 
     def test_detect_address(self):
         # print("4. test_detect_address")

@@ -39,7 +39,7 @@ class TestDetectAddress:
         data = address_parser.detect_address(adt)
         print('input data', adt)
         print('parsed data', data)
-        assert (data["division_gso"] == "")  # add assertion here
+        assert (data["division_local_id"] == "")  # add assertion here
 
     def test_address_11(self):
         address_parser = AP()
@@ -58,7 +58,7 @@ class TestDetectAddress:
         data = address_parser.detect_address(adt_uni)
         print('input data', adt)
         print('parsed data', data)
-        assert (data["division_gso"] == "79")  # add assertion here
+        assert (data["division_local_id"] == "79")  # add assertion here
 
     def test_address_09(self):
         address_parser = AP()
@@ -68,7 +68,7 @@ class TestDetectAddress:
         data = address_parser.detect_address(adt_uni)
         print('input data', adt)
         print('parsed data', data)
-        assert (data["division_gso"] == "79")  # add assertion here
+        assert (data["division_local_id"] == "79")  # add assertion here
 
     def test_address_08(self):
         address_parser = AP()
@@ -77,7 +77,7 @@ class TestDetectAddress:
         adt_uni = unidecode(adt)
         data = address_parser.detect_address(adt_uni)
         print(data)
-        assert (data["division_gso"] == "79")  # add assertion here
+        assert (data["division_local_id"] == "79")  # add assertion here
     
     def test_address_01(self):
         address_parser = AP()
@@ -86,7 +86,7 @@ class TestDetectAddress:
         adt_uni = unidecode(adt)
         data = address_parser.detect_division(adt_uni)
         print(adt_uni)
-        assert (data["division_gso"] == "79")  # add assertion here
+        assert (data["division_local_id"] == "79")  # add assertion here
 
     def test_address_02(self):
         address_parser = AP()
@@ -95,7 +95,7 @@ class TestDetectAddress:
         adt_uni = unidecode(adt)
         data = address_parser.detect_division(adt_uni)
         print(adt_uni)
-        assert (data["division_gso"] == "79")  # add assertion here
+        assert (data["division_local_id"] == "79")  # add assertion here
 
     def test_address_03(self):
         address_parser = AP()
@@ -103,7 +103,7 @@ class TestDetectAddress:
         adt = "thành phố Hồ Chí Minh"      ## tp hcm
         data = address_parser.detect_division(adt)
         print(adt)
-        assert (data["division_gso"] == "79")  # add assertion here
+        assert (data["division_local_id"] == "79")  # add assertion here
 
     def test_address_04(self):
         address_parser = AP()
@@ -112,7 +112,7 @@ class TestDetectAddress:
         adt_uni = unidecode(adt)
         data = address_parser.detect_division(adt_uni)
         print(adt_uni)
-        assert (data["division_gso"] == "34")  # add assertion here
+        assert (data["division_local_id"] == "34")  # add assertion here
 
     def test_address_05(self):
         address_parser = AP()
@@ -121,7 +121,7 @@ class TestDetectAddress:
         adt_uni = unidecode(adt)
         data = address_parser.detect_division(adt_uni)
         print(adt_uni)
-        assert (data["division_gso"] == "79")  # add assertion here
+        assert (data["division_local_id"] == "79")  # add assertion here
 
     def test_address_07(self):
         address_parser = AP()
@@ -129,7 +129,7 @@ class TestDetectAddress:
         adt = "Vũ Thư, Thái Bình"
         data = address_parser.detect_address(adt)
         print(data)
-        assert (data["division_gso"] == "34")  # add assertion here
+        assert (data["division_local_id"] == "34")  # add assertion here
 
 
 
