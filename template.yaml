@@ -31,7 +31,7 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       Description: "AddressCodeApi"
-      StageName: Stage
+      StageName: Prod
       Cors:
         AllowMethods: "'GET, POST, PUT, DELETE'"
         AllowHeaders: "'Accept,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
@@ -122,7 +122,7 @@ Resources:
 Outputs:
   AddressApi:
     Description: "API Gateway endpoint URL for Prod stage for AddressCodeFunction"
-    Value: !Sub "https://${AddressCodeApi}.execute-api.${AWS::Region}.amazonaws.com/Stage/"
+    Value: !Sub "https://${AddressCodeApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
   AddressCodeFunction:
     Description: "Lambda Function ARN"
     Value: !GetAtt AddressCodeFunction.Arn
