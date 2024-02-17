@@ -1,6 +1,7 @@
 import os
 import io
 import json
+import logging
 # import requests
 import sqlite3
 import boto3
@@ -117,9 +118,12 @@ def get_divisions(event,context):
     sqlstatement = "SELECT a.division_cd, a.division_name, a.country_iso3, local_id \
             FROM sys_division a \
             WHERE a.country_iso3 = ?"
-    + "order by a.division_name" if isEndWithSubdiv else " and a.division_cd = ?"
-    if not isEndWithSubdiv:
+    if isEndWithSubdiv:
+        sqlstatement + "order by a.division_name"
+    else:
+        sqlstatement + " and a.division_cd = ?"
         params.append(division_code)
+
     row_cnt = cur.execute(sqlstatement, params)
     data = None
     if isEndWithSubdiv:
@@ -353,7 +357,7 @@ def lambda_handler(event, context):
                 })
             }
     except Exception as err:
-        context.fail(str(err)+ ", event: " + str(event))
+        logging.exception(str(err)+ ", event: " + str(event))
         return {
             "statusCode": 500,
             "body": json.dumps({
