@@ -84,7 +84,7 @@ class TestAddressParser:
             "division_name": "",
             "division_iso": "VN-HN",
             "division_local_id": "01",
-            "division_id": 18,
+            "division_id": 1,
             "subdiv_local_id": "",
             "subdiv_name": "",
             "l2subdiv_local_id": "",
@@ -103,7 +103,7 @@ class TestAddressParser:
         origin_location = "H. CON DAO"  ## , Tỉnh Ba Ria - Vung Tau"
 
         addr_parser.data.update({"division_local_id": "77"})
-        addr_parser.data["division_id"] = 2
+        addr_parser.data["division_id"] = 51
 
         origin_location = " Vũng Tàu "
         origin_location = " Vung tau "
@@ -133,7 +133,7 @@ class TestAddressParser:
             "country_code": "VNM",
             "division_name": "TP. Hà Nội",
             "division_local_id": "01",
-            "division_id": 18,
+            "division_id": 1,
             "subdiv_local_id": "004",
             "subdiv_name": "Quận Long Biên",
             "l2subdiv_local_id": "",

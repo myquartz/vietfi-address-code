@@ -228,8 +228,8 @@ class AP:
 
         data: dict[str, Union[str, int]] = self.data
         division_id = data["division_id"]
-        subdiv_code = data["subdiv_code"]
-        l2subdiv_code = data["l2subdiv_code"]
+        subdiv_code = data["subdiv_local_id"]
+        l2subdiv_code = data["l2subdiv_local_id"]
 
         word_check = temp_str.lower().strip()
 
@@ -245,7 +245,7 @@ class AP:
                 l2subdiv_code = row[0]
                 l2subdiv_name = row[1]
                 if l2subdiv_code:
-                    data['l2subdiv_code'] = l2subdiv_code
+                    data['l2subdiv_local_id'] = l2subdiv_code
                 if l2subdiv_name:
                     data['l2subdiv_name'] = l2subdiv_name
             return data
@@ -279,7 +279,7 @@ class AP:
             if row:
                 l2subdiv_code = row[0]
                 if l2subdiv_code is not None:
-                    data["l2subdiv_code"] = l2subdiv_code
+                    data["l2subdiv_local_id"] = l2subdiv_code
                 l2subdiv_name = row[1]
                 if l2subdiv_name is not None:
                     data["l2subdiv_name"] = l2subdiv_name
@@ -360,7 +360,7 @@ class AP:
                 if data1 is not None:
                     data = data1
                     # print("proc 4.2:", data)
-                    subdiv_code = data.get("subdiv_code")
+                    subdiv_code = data.get("subdiv_local_id")
                     # neu subdiv_code khong co thi khong can lam gi nua
                     if subdiv_code is None or subdiv_code == '':
                         break
@@ -376,7 +376,7 @@ class AP:
                 if data1 is not None:
                     data = data1
                     # print("proc 4.3:", data)
-                    l2subdiv_code = data.get("l2subdiv_code")
+                    l2subdiv_code = data.get("l2subdiv_local_id")
                     # neu l2subdiv_code khong co thi khong can lam gi nua
                     if l2subdiv_code is not None and l2subdiv_code != '':
                         k -= 1
