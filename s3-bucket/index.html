@@ -116,6 +116,7 @@
             var elm = document.getElementById('countrySelect');
             elm.remove(0);
             var def = document.createElement('option');
+            def.value = '';
             def.text = '-- please select --';
             elm.add(def);
             countries.forEach(c => {
@@ -148,6 +149,7 @@
               var elm = document.getElementById('divisionSelect');
               elm.length = 0;
               var def = document.createElement('option');
+              def.value = '';
               def.text = '-- please select --';
               elm.add(def);
               divisions.forEach(c => {
@@ -181,6 +183,7 @@
               var elm = document.getElementById('subDivSelect');
               elm.length = 0;
               var def = document.createElement('option');
+              def.value = '';
               def.text = '-- please select --';
               elm.add(def);
               subdivisions.forEach(c => {
@@ -212,6 +215,7 @@
               var elm = document.getElementById('l2SubDivSelect');
               elm.length = 0;
               var def = document.createElement('option');
+              def.value = '';
               def.text = '-- please select --';
               elm.add(def);
               l2subdivisions.forEach(c => {
