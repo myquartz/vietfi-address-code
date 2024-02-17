@@ -167,7 +167,7 @@ def get_subdivisions(event,context):
     if 'subdiv_code' in event['pathParameters']:
         subdiv_code = event['pathParameters']['subdiv_code']
     params = (iso_code,division_code)
-    sqlstatement = "select a.subdiv_cd, a.l2subdiv_cd, a.subdiv_name, b.division_code, b.country_iso3 \
+    sqlstatement = "select a.subdiv_cd, a.l2subdiv_cd, a.subdiv_name, b.division_cd, b.country_iso3 \
         ,a.subdivid from sys_division_sub a, sys_division b \
         where a.divisionid = b.divisionid \
           and a.l2subdiv_cd = '00000' \
@@ -219,7 +219,7 @@ def get_l2subdivisions(event,context):
     if 'l2subdiv_code' in event['pathParameters']:
         l2subdiv_code = event['pathParameters']['l2subdiv_code']
     params = (iso_code, division_code, subdiv_code,)
-    sqlstatement = "select a.subdiv_cd, a.l2subdiv_cd, a.subdiv_name, b.division_code, b.country_iso3 \
+    sqlstatement = "select a.subdiv_cd, a.l2subdiv_cd, a.subdiv_name, b.division_cd, b.country_iso3 \
         from sys_division_sub a, sys_division b \
         where a.divisionid = b.divisionid \
           and b.country_iso3 = ? and b.division_cd = ? and a.subdiv_cd = ?"
