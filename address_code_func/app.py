@@ -119,10 +119,10 @@ def get_divisions(event,context):
             FROM sys_division a \
             WHERE a.country_iso3 = ?"
     if isEndWithSubdiv:
-        sqlstatement + "order by a.division_name"
+        sqlstatement += "order by a.division_name"
     else:
-        sqlstatement + " and a.division_cd = ?"
-        params.append(division_code)
+        sqlstatement += " and a.division_cd = ?"
+        params = (iso_code, division_code)
 
     row_cnt = cur.execute(sqlstatement, params)
     data = None
@@ -164,9 +164,11 @@ def get_subdivisions(event,context):
         where a.divisionid = b.divisionid \
           and a.l2subdiv_cd = '00000' \
           and b.country_iso3 = ? and b.division_cd = ?"
-    + "order by a.subdiv_name" if isEndWithSubdiv else " and a.subdiv_cd = ?"
-    if not isEndWithSubdiv:
-        params.append(subdiv_code)
+    if isEndWithSubdiv:
+        sqlstatement += "order by a.subdiv_name"
+    else:
+        sqlstatement += " and a.subdiv_cd = ?"
+        params = (iso_code,division_code,subdiv_code)
 
     row_cnt = cur.execute(sqlstatement, params)
     data = None
@@ -208,9 +210,12 @@ def get_l2subdivisions(event,context):
         from sys_division_sub a, sys_division b \
         where a.divisionid = b.divisionid \
           and b.country_iso3 = ? and b.division_cd = ? and a.subdiv_cd = ?"
-    + "order by a.subdiv_name" if isEndWithSubdiv else " and a.l2subdiv_cd = ?"
-    if not isEndWithSubdiv:
-        params.append(l2subdiv_code)
+    if isEndWithSubdiv:
+        sqlstatement += "order by a.subdiv_name"
+    else:
+        sqlstatement += " and a.l2subdiv_cd = ?"
+        params = (iso_code, division_code, subdiv_code, l2subdiv_code)
+        
     row_cnt = cur.execute(sqlstatement, params)
     data = None
     if isEndWithSubdiv:
