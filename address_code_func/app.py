@@ -93,11 +93,15 @@ def get_country_by_code(event,context):
     params = (iso_code,)
     sqlstatement = "SELECT iso3, nicename FROM sys_country WHERE iso3 = ?"
     row_cnt = cur.execute(sqlstatement, params)
-    data = [{
-        "code": row[0],
-        "name": row[1]
-    } for row in cur.fetchall()]
-    status_code = 200 if data else 404
+    row = cur.fetchone()
+    if row:
+        data = {
+            "code": row[0],
+            "name": row[1]
+        }
+        status_code = 200
+    else:
+        status_code = 404
 
     return {
         "statusCode": status_code,
@@ -126,6 +130,7 @@ def get_divisions(event,context):
 
     row_cnt = cur.execute(sqlstatement, params)
     data = None
+    status_code = 200
     if isEndWithSubdiv:
         data = [{ 
             "division_code": row[0], 
@@ -135,13 +140,15 @@ def get_divisions(event,context):
             } for row in cur.fetchall()]
     else:
         row = cur.fetchone()
-        status_code = 200 if row else 404
-        data = {
-            "division_code": row[0], 
-            "name:": row[1],
-            "country_iso3": row[2],
-            "local_id": row[3]
-        }
+        if not row:
+            status_code = 404
+        else:
+            data = {
+                "division_code": row[0], 
+                "name:": row[1],
+                "country_iso3": row[2],
+                "local_id": row[3]
+            }
     
     return {
         "statusCode": status_code,
@@ -172,6 +179,7 @@ def get_subdivisions(event,context):
 
     row_cnt = cur.execute(sqlstatement, params)
     data = None
+    status_code = 200
     if isEndWithSubdiv:
         data = [{
             "local_id": row[0],
@@ -181,13 +189,15 @@ def get_subdivisions(event,context):
         } for row in cur.fetchall()]
     else:
         row = cur.fetchone()
-        status_code = 200 if row else 404
-        data = {
-            "local_id": row[0],
-            "name": row[2],
-            "division_code": row[3],
-            "country_code": row[4]
-        }
+        if not row:
+            status_code = 404
+        else:
+            data = {
+                "local_id": row[0],
+                "name": row[2],
+                "division_code": row[3],
+                "country_code": row[4]
+            }
 
 
     return {
@@ -219,6 +229,7 @@ def get_l2subdivisions(event,context):
         
     row_cnt = cur.execute(sqlstatement, params)
     data = None
+    status_code = 200
     if isEndWithSubdiv:
         data = [{
             "local_id": row[1],
@@ -229,7 +240,8 @@ def get_l2subdivisions(event,context):
         } for row in cur.fetchall()]
     else:
         row = cur.fetchone()
-        status_code = 200 if row else 404
+        if not row:
+            status_code = 404
         data = {
             "local_id": row[1],
             "subdiv_local_id": row[0],
