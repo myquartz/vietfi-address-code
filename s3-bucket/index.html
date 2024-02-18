@@ -128,7 +128,7 @@
             });
         })
         .catch(function(e) {
-          jQuery("div").insertAfter('#selection_result').addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
+          jQuery('#selection_result').after(jQuery("div")).addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
         });
       }
       
@@ -161,7 +161,7 @@
               });
             })
             .catch(function(e) {
-              jQuery("div").insertAfter('#selection_result').addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
+              jQuery('#selection_result').after(jQuery("div")).addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
             });
         }
         else
@@ -195,7 +195,7 @@
               });
             })
             .catch(function(e) {
-              jQuery("div").insertAfter('#selection_result').addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
+              jQuery('#selection_result').after(jQuery("div")).addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
             });
         }
         else
@@ -227,7 +227,7 @@
               });
             })
             .catch(function(e) {
-              jQuery("div").insertAfter('#selection_result').addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
+              jQuery('#selection_result').after(jQuery("div")).addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
             });
         }
         else
