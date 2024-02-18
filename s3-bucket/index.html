@@ -11,8 +11,11 @@
     <div class="container">
       <!-- Content here -->
       <h1>Hello, This is Geography Division Hierarchy Demo!</h1>
-      <p>Our dataset currently supports for Vietnam's Division and limited for Singapore, Thailan, Cambodia and Laos</p>
+      <p>Our dataset currently supports for Vietnam's Division and limited for Singapore, Thailand, Cambodia and Laos</p>
 
+      <div class="mb-3" id="errorbox">
+        </div>
+      
       <ul class="nav nav-tabs">
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="#" 
@@ -128,7 +131,7 @@
             });
         })
         .catch(function(e) {
-          jQuery('#selection_result').after(jQuery("div")).addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
+          jQuery("errorbox").addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
         });
       }
       
@@ -161,7 +164,7 @@
               });
             })
             .catch(function(e) {
-              jQuery('#selection_result').after(jQuery("div")).addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
+              jQuery("errorbox").addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
             });
         }
         else
@@ -195,7 +198,7 @@
               });
             })
             .catch(function(e) {
-              jQuery('#selection_result').after(jQuery("div")).addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
+              jQuery("errorbox").addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
             });
         }
         else
@@ -227,7 +230,7 @@
               });
             })
             .catch(function(e) {
-              jQuery('#selection_result').after(jQuery("div")).addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
+              jQuery("errorbox").addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
             });
         }
         else
