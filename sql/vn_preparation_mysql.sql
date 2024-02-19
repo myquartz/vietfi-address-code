@@ -3,6 +3,13 @@ SELECT COUNT(*) FROM vn_gso_district_ward;
 
 SELECT COUNT(*) FROM sys_division;
 
+SELECT * FROM sys_division;
+
+SELECT * FROM iso_vn_province WHERE prov_code = 'VN-47';
+SELECT * FROM vn_gso_district_ward WHERE ward_code = '';
+
+SELECT * FROM vn_gso_district_ward WHERE ward_code = '';
+
 #INSERT INTO sys_division
 
 SELECT * FROM vn_gso_province p
@@ -21,10 +28,6 @@ SELECT 'VNM', p.prov_code AS iso_code, d.province_name, d.prov_code AS local_id,
 JOIN vn_gso_province d ON d.prov_code = '46' AND p.prov_code = 'VN-26'
 ORDER BY province_class, local_id;
 #ORDER BY NULLIF(NULLIF(NULLIF(NULLIF(NULLIF(local_id,'92'),'48'),'01'),'31'),'79'), local_id;
-
-
-SELECT * FROM iso_vn_province WHERE prov_code = 'VN-47';
-SELECT * FROM vn_gso_district_ward WHERE ward_code = '';
 
 INSERT INTO sys_division_sub (divisionid, subdiv_cd, l2subdiv_cd, subdiv_name)
 SELECT divisionid, '000','00000','(không có huyện/quận)' FROM sys_division WHERE country_iso3 = 'VNM'

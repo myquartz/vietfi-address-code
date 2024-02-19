@@ -254,9 +254,12 @@
           jQuery('#g_l2subdivision strong').text('').next().text('');
           jQuery('#g_address span').text('');
           
-          fetch(apiURL+"/address",{ method: "post", mode:"cors",headers:
+          fetch(apiURL+"/address-guess",{ method: "post", mode:"cors",headers:
                                    {"Content-type":"application/json"},
-                                   body: JSON.stringify({address_text: f.adt.value})})
+                                  body: JSON.stringify({
+                                    address_text: f.adt.value,
+                                    approximately_match: false
+                                  })})
             .then(function(resp) {
               if(resp.status != 200)
                 throw "HTTP Error "+resp.status;

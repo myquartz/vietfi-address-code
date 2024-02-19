@@ -116,6 +116,12 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref AddressCodeApi
+            Path: /address-guess
+            Method: post
+        AddressTextParserCompat:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AddressCodeApi
             Path: /address
             Method: post
 

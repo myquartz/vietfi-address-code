@@ -328,6 +328,9 @@ api_routes = {
     '/countries/{iso_code}/divisions/{division_code}/subdivisions/{subdiv_code}/l2subdivisions/{l2subdiv_code}': {
           'GET': get_l2subdivisions,
     },
+    '/address-guess': {
+          'POST': post_address_parser,
+    },
     '/address': {
           'POST': post_address_parser,
     }
