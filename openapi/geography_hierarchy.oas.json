@@ -1,0 +1,559 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "GeographyHierarchy",
+    "description": "Geography Hierarchy (address code) Master Data Utility",
+    "version": "1.0"
+  },
+  "paths": {
+    "/countries": {
+      "get": {
+        "description": "return list of countries",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "x-amf-mediaType": "application/json",
+            "schema": {
+              "example": [
+                {
+                  "code": "VNM",
+                  "name": "Viet Nam"
+                },
+                {
+                  "code": "SGP",
+                  "name": "Singapore"
+                }
+              ],
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CountryType"
+              }
+            }
+          },
+          "500": {
+            "description": "internal server error"
+          }
+        }
+      }
+    },
+    "/countries/{country_code}": {
+      "get": {
+        "description": "return country information",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "country_code",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "x-amf-mediaType": "application/json",
+            "schema": {
+              "$ref": "#/definitions/CountryType"
+            }
+          },
+          "500": {
+            "description": "internal server error"
+          }
+        }
+      }
+    },
+    "/countries/{country_code}/divisions": {
+      "get": {
+        "description": "return list of divisions in the country",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "country_code",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "x-amf-mediaType": "application/json",
+            "schema": {
+              "example": [
+                {
+                  "division_code": "VN-SG",
+                  "name": "Ho Chi Minh City",
+                  "local_id": "02",
+                  "country_code": "VN"
+                },
+                {
+                  "division_code": "VN-HN",
+                  "name": "Hanoi",
+                  "local_id": "01",
+                  "country_code": "VN"
+                }
+              ],
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/DivisionType"
+              }
+            }
+          },
+          "500": {
+            "description": "internal server error"
+          }
+        }
+      }
+    },
+    "/countries/{country_code}/divisions/{division_code}": {
+      "get": {
+        "description": "return division information",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "country_code",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "division_code",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "x-amf-mediaType": "application/json",
+            "schema": {
+              "$ref": "#/definitions/DivisionType"
+            }
+          },
+          "500": {
+            "description": "internal server error"
+          }
+        }
+      }
+    },
+    "/countries/{country_code}/divisions/{division_code}/subdivisions": {
+      "get": {
+        "description": "return list of sub-divisions of the division in the country, identified by local code",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "country_code",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "division_code",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "x-amf-mediaType": "application/json",
+            "schema": {
+              "example": [
+                {
+                  "local_id": "760",
+                  "name": "Quận 1",
+                  "division_code": "VN-SG",
+                  "country_code": "VN"
+                },
+                {
+                  "local_id": "772",
+                  "name": "Quận 11",
+                  "division_code": "VN-SG",
+                  "country_code": "VN"
+                }
+              ],
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SubDivisionType"
+              }
+            }
+          },
+          "500": {
+            "description": "internal server error"
+          }
+        }
+      }
+    },
+    "/countries/{country_code}/divisions/{division_code}/subdivisions/{subdiv_local_id}": {
+      "get": {
+        "description": "return sub-division information",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "country_code",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "division_code",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "subdiv_local_id",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "x-amf-mediaType": "application/json",
+            "schema": {
+              "$ref": "#/definitions/SubDivisionType"
+            }
+          },
+          "500": {
+            "description": "internal server error"
+          }
+        }
+      }
+    },
+    "/countries/{country_code}/divisions/{division_code}/subdivisions/{subdiv_local_id}/l2subdivisions": {
+      "get": {
+        "description": "return list of level 2 sub divisions in the sub-division",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "country_code",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "division_code",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "subdiv_local_id",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "x-amf-mediaType": "application/json",
+            "schema": {
+              "example": [
+                {
+                  "local_id": "26743",
+                  "subdiv_local_id": "760",
+                  "name": "Phường Bến Thành",
+                  "division_code": "VN-SG",
+                  "country_code": "VN"
+                },
+                {
+                  "local_id": "26740",
+                  "subdiv_local_id": "760",
+                  "name": "Phường Bến Nghé",
+                  "division_code": "VN-SG",
+                  "country_code": "VN"
+                },
+                {
+                  "local_id": "26755",
+                  "subdiv_local_id": "760",
+                  "name": "Phường Cô Giang",
+                  "division_code": "VN-SG",
+                  "country_code": "VN"
+                }
+              ],
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SubDivisionType"
+              }
+            }
+          },
+          "500": {
+            "description": "internal server error"
+          }
+        }
+      }
+    },
+    "/countries/{country_code}/divisions/{division_code}/subdivisions/{subdiv_local_id}/l2subdivisions/{l2subdiv_local_id}": {
+      "get": {
+        "description": "return level 2 sub-division information",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "country_code",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "division_code",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "subdiv_local_id",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "l2subdiv_local_id",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "x-amf-mediaType": "application/json",
+            "schema": {
+              "$ref": "#/definitions/SubDivisionType"
+            }
+          },
+          "500": {
+            "description": "internal server error"
+          }
+        }
+      }
+    },
+    "/address-guess": {
+      "post": {
+        "description": "guessing address codes hierachy from an address text",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "x-amf-mediaType": "application/json",
+            "in": "body",
+            "name": "generated",
+            "schema": {
+              "type": "object",
+              "required": [
+                "address_text"
+              ],
+              "properties": {
+                "address_text": {
+                  "description": "free text of the address",
+                  "example": "10 Lý quốc sư, phường Hàng Trống, Hoàn Kiếm, Hà Nội",
+                  "type": "string"
+                },
+                "approximately_match": {
+                  "description": "finding by approximate matching algorithm (using AI or fuzzy)",
+                  "default": false,
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "x-amf-mediaType": "application/json",
+            "schema": {
+              "example": {
+                "country_code": "VNM",
+                "division_name\"": "Thành phố Hà Nội",
+                "division_code\"": "VN-HN",
+                "division_local_id\"": "01",
+                "subdiv_local_id\"": "002",
+                "subdiv_name\"": "Quận Hoàn Kiếm",
+                "l2subdiv_local_id\"": "00070",
+                "l2subdiv_name\"": "Phường Hàng Trống",
+                "address_line\"": "10 Lý quốc sư",
+                "probability": 1.0
+              },
+              "type": "object",
+              "required": [
+                "country_code"
+              ],
+              "properties": {
+                "country_code": {
+                  "description": "the country code in ISO 8601",
+                  "type": "string"
+                },
+                "division_name": {
+                  "description": "level 2 sub-division name",
+                  "type": "string"
+                },
+                "division_code": {
+                  "description": "the division code in ISO 8601",
+                  "type": "string"
+                },
+                "division_local_id": {
+                  "description": "division id in local standard",
+                  "type": "string"
+                },
+                "subdiv_local_id": {
+                  "description": "sub-division id",
+                  "type": "string"
+                },
+                "subdiv_name": {
+                  "description": "sub-division name",
+                  "type": "string"
+                },
+                "l2subdiv_local_id": {
+                  "description": "level 2 sub-division id",
+                  "type": "string"
+                },
+                "l2subdiv_name": {
+                  "description": "level 2 sub-division name",
+                  "type": "string"
+                },
+                "address_line": {
+                  "description": "address line (all from address_text left)",
+                  "type": "string"
+                },
+                "probability": {
+                  "description": "probability of guessing, max = 1 (exactly matching).",
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "internal server error"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "CountryType": {
+      "example": {
+        "code": "VNM",
+        "name": "Viet Nam"
+      },
+      "type": "object",
+      "required": [
+        "code",
+        "name"
+      ],
+      "properties": {
+        "code": {
+          "description": "ISO 8601 code",
+          "type": "string"
+        },
+        "name": {
+          "description": "country name",
+          "type": "string"
+        }
+      }
+    },
+    "DivisionType": {
+      "example": {
+        "division_code": "VN-SG",
+        "name": "Ho Chi Minh City",
+        "local_id": "02",
+        "country_code": "VN"
+      },
+      "type": "object",
+      "required": [
+        "division_code",
+        "name",
+        "country_code"
+      ],
+      "properties": {
+        "division_code": {
+          "description": "ISO 3166-2 code",
+          "type": "string"
+        },
+        "name": {
+          "description": "division name",
+          "type": "string"
+        },
+        "local_id": {
+          "description": "division id in local standard",
+          "type": "string"
+        },
+        "country_code": {
+          "description": "ISO 8601 country code (division belongs to)",
+          "type": "string"
+        }
+      }
+    },
+    "SubDivisionType": {
+      "x-amf-examples": {
+        "example_0": {
+          "local_id": "760",
+          "name": "Quận 1",
+          "division_code": "VN-SG",
+          "country_code": "VN"
+        },
+        "example_1": {
+          "local_id": "26743",
+          "subdiv_local_id": "760",
+          "name": "Phường Bến Thành",
+          "division_code": "VN-SG",
+          "country_code": "VN"
+        }
+      },
+      "type": "object",
+      "required": [
+        "local_id",
+        "name",
+        "division_code",
+        "country_code"
+      ],
+      "properties": {
+        "local_id": {
+          "description": "the identification code in local standard (sub division level 1 or level 2)",
+          "type": "string"
+        },
+        "subdiv_local_id": {
+          "description": "parent sub-division id (in this case local_id is Level 2 sub division)",
+          "type": "string"
+        },
+        "name": {
+          "description": "sub division name (at the level)",
+          "type": "string"
+        },
+        "division_code": {
+          "description": "parent division code",
+          "type": "string"
+        },
+        "country_code": {
+          "description": "ISO 8601 country code (division belongs to)",
+          "type": "string"
+        }
+      }
+    }
+  }
+}
