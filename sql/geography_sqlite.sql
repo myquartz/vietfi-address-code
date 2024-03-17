@@ -17,7 +17,7 @@ CREATE INDEX IF NOT EXISTS iso2 ON sys_country(iso2);
 
 CREATE TABLE IF NOT EXISTS sys_division (
   divisionid INTEGER PRIMARY KEY AUTOINCREMENT,
-  country_iso3 INTEGER NOT NULL,
+  country_iso3 char(3) NOT NULL,
   division_cd varchar(12) COLLATE NOCASE NOT NULL,
   division_name varchar(128) COLLATE NOCASE NOT NULL,
   division_category varchar(32) COLLATE NOCASE DEFAULT NULL,
