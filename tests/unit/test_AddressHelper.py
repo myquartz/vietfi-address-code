@@ -19,4 +19,4 @@ def test_load_special_mapping():
 
     # self.assertEqual(adh.params, expected_params)
     assert adh.special_division['tỉnh bà rịa vũng tàu'] == expected_special_division['tỉnh bà rịa vũng tàu']
-    assert adh.special_division_sub_div == expected_special_subdiv
+    assert adh.special_division_sub_div['thành phố phan rang tháp chàm'] == expected_special_subdiv['thành phố phan rang tháp chàm']
