@@ -62,7 +62,7 @@ Resources:
               - !Sub 'arn:aws:s3:::${BucketName}/*'
               - !Sub 'arn:aws:s3:::${BucketName}'
       Architectures:
-        - arm64
+        - x86_64
       Events:
         CountryList:
           Type: Api
