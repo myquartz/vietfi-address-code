@@ -1,14 +1,14 @@
 {
   "body": "",
-  "resource": "/countries",
-  "path": "/countries",
+  "resource": "/countries/{iso_code}/divisions",
+  "path": "/countries/VNM/divisions",
   "httpMethod": "GET",
   "isBase64Encoded": false,
   "queryStringParameters": {
-    "foo": "bar"
+    "namespace": "before2025"
   },
   "pathParameters": {
-    "proxy": "/path/to/resource"
+    "iso_code": "VNM"
   },
   "stageVariables": {
     "baz": "qux"
