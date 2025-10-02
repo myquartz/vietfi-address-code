@@ -92,7 +92,7 @@ jobs:
             --region ${TESTING_REGION} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
-            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
+            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
             --parameter-overrides BucketName=${TESTING_S3_BUCKET} DataFileKey=${FEATURE_STACK_NAME}/address_db.sqlite3 CorsAllowOrigin=\'https://${TESTING_S3_BUCKET}.s3.${TESTING_REGION}.amazonaws.com\'
           aws s3 cp s3-bucket/address_db.sqlite3 s3://${TESTING_S3_BUCKET}/${FEATURE_STACK_NAME}/address_db.sqlite3
       - name: Generate HTML Demo Page
@@ -138,7 +138,7 @@ jobs:
             --region ${TESTING_REGION} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
-            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
+            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
             --parameter-overrides BucketName=${TESTING_S3_BUCKET} DataFileKey=${TESTING_STACK_NAME}/address_db.sqlite3 CorsAllowOrigin=\'https://${TESTING_S3_BUCKET}.s3.${TESTING_REGION}.amazonaws.com\'
           aws s3 cp s3-bucket/address_db.sqlite3 s3://${TESTING_S3_BUCKET}/${TESTING_STACK_NAME}/address_db.sqlite3
       - name: Generate HTML Demo Page
@@ -277,10 +277,9 @@ jobs:
             --region ${TESTING_REGION} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
-            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
+            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
             --parameter-overrides BucketName=${TESTING_S3_BUCKET} DataFileKey=${TESTING_STACK_NAME}/address_db.sqlite3 CorsAllowOrigin=\'https://${TESTING_S3_BUCKET}.s3.${TESTING_REGION}.amazonaws.com\'
           aws s3 cp s3-bucket/address_db.sqlite3 s3://${TESTING_S3_BUCKET}/${TESTING_STACK_NAME}/address_db.sqlite3
-          aws s3 cp temp.html s3://${TESTING_S3_BUCKET}/testing.html
       - name: Generate HTML Demo Page
         shell: bash
         run: |
@@ -353,7 +352,7 @@ jobs:
             --region ${PROD_REGION} \
             --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
-            --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE}
+            --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
             --parameter-overrides BucketName=${PROD_S3_BUCKET} DataFileKey=${PROD_STACK_NAME}/address_db.sqlite3 CorsAllowOrigin=\'https://${PROD_S3_BUCKET}.s3.${PROD_REGION}.amazonaws.com\'
           aws s3 cp s3-bucket/address_db.sqlite3 s3://${PROD_S3_BUCKET}/${PROD_STACK_NAME}/address_db.sqlite3
       - name: Generate HTML Demo Page
