@@ -99,6 +99,7 @@ class AP:
                 l2subdiv_name = row[1]
                 if l2subdiv_name:
                     data['l2subdiv_name'] = l2subdiv_name
+                    data['subdivid'] = subdiv_id # in this case, the subdivid is the id of the l2subdiv
         return data
 
     @staticmethod
