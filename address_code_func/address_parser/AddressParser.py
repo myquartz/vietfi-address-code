@@ -96,7 +96,7 @@ class AP:
                 cur.execute(sql, params)
                 row = cur.fetchone()
             if row:
-                l2subdiv_name = row[0]
+                l2subdiv_name = row[1]
                 if l2subdiv_name:
                     data['l2subdiv_name'] = l2subdiv_name
         return data
