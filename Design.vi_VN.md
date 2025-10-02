@@ -11,7 +11,8 @@ Tính năng liệt kê như sau:
 1. Cung cấp lựa chọn 4 phân cấp: country, division (province level), sub division (district level), level 2 sub division (commune level).
 2. Sử dụng mã tiêu chuẩn: 2 cấp country và division là ISO 3166-2, 2 cấp dưới là tuỳ theo guốc gia, với Việt Nam là mã của Tổng cục thống kê (3 số cho cấp quận/huyện/thị xã và 5 số cho cấp phường/xã/thị trấn).
 3. Cho phép lựa chọn linh hoạt, ở cấp 3 (sub division) hay cấp 4 (level 2 sub division) chỉ cần chỉ định mã quốc gia + mã đơn vị đó là xác định các cấp trên đó.
-4. Dự định tương lai: thêm tiện ích nhập 1 dòng địa chỉ, thì phân tách thành 3-4 cấp nhiều nhất có thể của địa chỉ.
+4. Tiện ích nhập 1 dòng địa chỉ, thì phân tách thành 3-4 cấp nhiều nhất có thể của địa chỉ.
+5. Thêm hỗ trợ chính quyền 2 cấp (Tỉnh/Thành phố - Phường/Xã, bỏ cấp Quận/Huyện). Hỗ trợ chuyển đổi mã code từ 3 cấp thành 2 cấp (chưa có CSDL)
 
 ### Ý tưởng Kiến trúc - phi chức năng
 

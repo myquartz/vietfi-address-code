@@ -2,12 +2,12 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "vietfi-address-code"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-12bim3a7zr6k3"
-s3_prefix = "vietfi-address-code"
+stack_name = "vietfi-address-dev"
+s3_bucket = "vietfi-api-data"
+s3_prefix = "vietfi-address-dev"
 region = "ap-southeast-1"
 capabilities = "CAPABILITY_IAM"
 image_repositories = []
 resolve_s3 = false
 confirm_changeset = false
-parameter_overrides = "BucketName=\"vietfi-api-data\" DataFileKey=\"address_db.sqlite3\" CorsAllowOrigin=\"'https://vietfi-api-data.s3.ap-southeast-1.amazonaws.com'\""
+parameter_overrides = "BucketName=\"vietfi-api-data\" DataFileKey=\"vietfi-address-dev/address_db.sqlite3\" CorsAllowOrigin=\"'https://vietfi-api-data.s3.ap-southeast-1.amazonaws.com'\""

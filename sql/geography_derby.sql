@@ -7,7 +7,7 @@ CREATE TABLE sys_country (
   phonecode INTEGER DEFAULT NULL
 );
 
-CREATE INDEX IF NOT EXISTS iso2 ON sys_country(iso2);
+CREATE INDEX iso2 ON sys_country(iso2);
 
 CREATE TABLE sys_division (
   divisionid INTEGER PRIMARY KEY,
