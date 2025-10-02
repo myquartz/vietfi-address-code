@@ -44,7 +44,7 @@ Resources:
     Properties:
       CodeUri: address_code_func/
       Handler: app.lambda_handler
-      Runtime: python3.9
+      Runtime: python3.13
       Environment:
         Variables:
           TZ: Asia/Ho_Chi_Minh

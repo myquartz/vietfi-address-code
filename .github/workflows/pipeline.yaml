@@ -48,7 +48,7 @@ jobs:
           use-installer: true
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.13'
           cache: 'pip' 
       - run: |
           # trigger the tests here
@@ -86,8 +86,8 @@ jobs:
       - name: Deploy to feature stack in the testing account
         shell: bash
         run: |
-          FEATURE_STACK_NAME=$(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-_]')
-          sam deploy --stack-name $(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-]') \
+          FEATURE_STACK_NAME=$(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-]')
+          sam deploy --stack-name ${FEATURE_STACK_NAME} \
             --capabilities CAPABILITY_IAM \
             --region ${TESTING_REGION} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
@@ -98,7 +98,7 @@ jobs:
       - name: Generate HTML Demo Page
         shell: bash
         run: |
-          FEATURE_STACK_NAME=$(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-_]')
+          FEATURE_STACK_NAME=$(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-]')
           API_HOST=$(aws cloudformation describe-stack-resources --stack-name ${FEATURE_STACK_NAME} \
             --query '(StackResources[?LogicalResourceId==`AddressCodeApi`].PhysicalResourceId)[0]')
           API_STAGE=$(aws cloudformation describe-stack-resources --stack-name ${FEATURE_STACK_NAME} \
@@ -300,7 +300,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.13'
           cache: 'pip' 
       - name: Assume the testing pipeline user role
         uses: aws-actions/configure-aws-credentials@v1-node16
