@@ -185,8 +185,7 @@ class ADH:
     global uni_decode
     def uni_decode(s: str):
         s = unicodedata.normalize('NFD', s)
-        r = unidecode(s)
-        return r
+        return unidecode(s)
 
     @staticmethod
     def normalize_name(s: str):

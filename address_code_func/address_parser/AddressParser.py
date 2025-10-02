@@ -134,19 +134,18 @@ class AP:
 
         if word_check_lower in special_division:
             division_id = special_division[word_check_lower]
-        notFound = 2
-        while notFound > 0:
+        searchRound = 2
+        while searchRound > 0:
             if division_id > 0:
                 sql = "SELECT divisionid, division_cd, division_name, local_id \
                         FROM sys_division WHERE divisionid = ? AND country_iso3 = ? AND (namespaceset & ? > 0 OR namespaceset = 0)"
                 params = (division_id, data["country_code"], ns_value)
             elif self.adh.pre_map[selected_ns_pos].get(1) is None:
-                sql = "SELECT divisionid, division_cd, division_name, local_id \
-                                    FROM sys_division \
-                                    WHERE country_iso3 = ? AND (namespaceset & ? > 0 OR namespaceset = 0) AND division_name = ?"
-                params = (data["country_code"], ns_value, word_check)
-                notFound = 0
-            elif notFound == 2:
+                sql = "SELECT divisionid, division_cd, division_name, local_id FROM sys_division \
+                        WHERE country_iso3 = ? AND (namespaceset & ? > 0 OR namespaceset = 0) AND lower(division_name) = ?"
+                params = (data["country_code"], ns_value, word_check_lower)
+                searchRound = 0 # only 1 round
+            elif searchRound == 2:
                 sql = "SELECT divisionid, division_cd, division_name, local_id \
                                     FROM sys_division \
                                     WHERE country_iso3 = ? AND (namespaceset & ? > 0 OR namespaceset = 0) AND division_name IN (?"
@@ -161,7 +160,7 @@ class AP:
                     sql += ",?"
                 sql = sql + ")"
                 params = tuple(plist)
-            elif notFound == 1:
+            elif searchRound == 1:
                 # Try with non-accented, lower case string
                 sql = "SELECT divisionid, division_cd, division_name, local_id \
                         FROM sys_division \
@@ -199,7 +198,7 @@ class AP:
                     return True
                 break
             else:
-                notFound -= 1
+                searchRound -= 1
                 division_id = 0
 
         return False
@@ -230,21 +229,19 @@ class AP:
         if subdiv_id == 0 and word_check_lower in special_division_sub_div:
             subdiv_id = special_division_sub_div[word_check_lower]
 
-        notFound = 2
-        while notFound > 0:
+        searchRound = 2
+        while searchRound > 0:
             if subdiv_id > 0:
-                sql = "SELECT subdiv_cd, l2subdiv_cd, subdiv_name, subdivid \
-                    FROM sys_division_sub \
+                sql = "SELECT subdiv_cd, l2subdiv_cd, subdiv_name, subdivid FROM sys_division_sub \
                     WHERE divisionid = ? AND subdivid = ? AND (namespaceset & ? > 0 OR namespaceset = 0)"
                 params = (division_id, subdiv_id,ns_value,)
             elif self.adh.pre_map[selected_ns_pos].get(2) is None:
-                sql = "SELECT subdiv_cd, l2subdiv_cd, subdiv_name, subdivid \
-                            FROM sys_division_sub \
-                            WHERE divisionid = ? AND l2subdiv_cd = '00000' AND (namespaceset & ? > 0 OR namespaceset = 0) \
-                            AND subdiv_name = ?"
-                params = (division_id, ns_value, word_check,)
-                notFound = 0
-            elif notFound == 2:
+                sql = "SELECT subdiv_cd, l2subdiv_cd, subdiv_name, subdivid FROM sys_division_sub \
+                    WHERE divisionid = ? AND l2subdiv_cd = '00000' AND (namespaceset & ? > 0 OR namespaceset = 0) \
+                        AND lower(subdiv_name) = ?"
+                params = (division_id, ns_value, word_check_lower,)
+                searchRound = 0 # only 1 round
+            elif searchRound == 2:
                 # handle abbreviation of subdivision like q. h.
                 # word_ext = self.adh.extend_prefix2fullname(word_check)
                 # word_ext = self.adh.extend_prefix_to_fullname(word_check)
@@ -265,7 +262,7 @@ class AP:
                     sql = sql + ",?"
                 sql = sql + ")"
                 params = tuple(plist)
-            elif notFound == 1:
+            elif searchRound == 1:
                 # print("not found search result ")
                 # print(row)
                 # search with un-accented text using unidecode
@@ -307,7 +304,7 @@ class AP:
                     return True
                 break
             else:
-                notFound -= 1
+                searchRound -= 1
                 subdiv_id = 0
 
         return False
@@ -350,9 +347,9 @@ class AP:
                 sql = "SELECT l2subdiv_cd, subdiv_name, subdivid FROM sys_division_sub \
                         WHERE divisionid = ? AND l2subdiv_cd <> '00000' AND (namespaceset & ? > 0 OR namespaceset = 0) \
                         AND subdiv_cd = ? \
-                        AND subdiv_name = ?"
-                params = (division_id, ns_value, subdiv_code, word_check,)
-                notFound = 0
+                        AND lower(subdiv_name) = ?"
+                params = (division_id, ns_value, subdiv_code, word_check_lower,)
+                notFound = 0 # only 1 round
             elif notFound == 2:
                 # handle p02 cases
 

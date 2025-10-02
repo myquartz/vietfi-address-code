@@ -35,7 +35,7 @@ bucketName = os.getenv('BUCKET_NAME')
 objectName = os.getenv('DB_FILE_KEY', 'address_db.sqlite3')
 
 client = boto3.client('s3')
-temp_file_name = DB_DIR + "/" + objectName.split('/')[-1]
+temp_file_name = os.path.join(DB_DIR, objectName.split('/')[-1])
 if client is not None and bucketName is not None and not os.path.exists(temp_file_name):
     print("Loading from s3://" + bucketName + "/" + objectName)
     s3resp = client.get_object(
