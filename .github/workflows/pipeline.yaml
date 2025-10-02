@@ -54,6 +54,7 @@ jobs:
           # trigger the tests here
           sam validate --lint
           pip install -r tests/requirements.txt
+          export PYTHONPATH="${PYTHONPATH}:$(pwd)/address_code_func:$(pwd)"
           python -m pytest tests/unit
 
   build-and-deploy-feature:
