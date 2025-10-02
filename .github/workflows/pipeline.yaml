@@ -40,7 +40,7 @@ env:
 jobs:
   test:
     if: github.event_name == 'push'
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: aws-actions/setup-sam@v2
@@ -64,7 +64,7 @@ jobs:
     # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
     if: startsWith(github.ref, 'refs/heads/feature')
     needs: [test]
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: aws-actions/setup-sam@v2
@@ -111,7 +111,7 @@ jobs:
   build-and-deploy-bug:
     if: startsWith(github.ref, 'refs/heads/bug')
     needs: [test]
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: aws-actions/setup-sam@v2
@@ -156,7 +156,7 @@ jobs:
 
   delete-feature:
     if: startsWith(github.event.ref, 'feature') && github.event_name == 'delete'
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: aws-actions/setup-sam@v2
@@ -189,7 +189,7 @@ jobs:
   build-and-package:
     if: github.ref == 'refs/heads/main'
     needs: [test]
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: aws-actions/setup-sam@v2
@@ -248,7 +248,7 @@ jobs:
   deploy-testing:
     if: github.ref == 'refs/heads/main'
     needs: [build-and-package]
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: aws-actions/setup-sam@v2
@@ -295,7 +295,7 @@ jobs:
   integration-test:
     if: github.ref == 'refs/heads/main'
     needs: [deploy-testing]
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -320,7 +320,7 @@ jobs:
   deploy-prod:
     if: github.ref == 'refs/heads/main'
     needs: [deploy-testing]
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     # Configure GitHub Action Environment to have a manual approval step before deployment to production
     # https://docs.github.com/en/actions/reference/environments
     # environment: <configured-environment>
