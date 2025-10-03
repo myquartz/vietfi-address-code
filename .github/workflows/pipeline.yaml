@@ -184,7 +184,7 @@ jobs:
             --region ${TESTING_REGION} \
             --no-prompts
           aws s3 rm s3://${TESTING_S3_BUCKET}/${FEATURE_STACK_NAME}.html
-          aws s3 cp s3://${TESTING_S3_BUCKET}/${FEATURE_STACK_NAME}/address_db.sqlite3
+          aws s3 rm s3://${TESTING_S3_BUCKET}/${FEATURE_STACK_NAME}/address_db.sqlite3
 
   build-and-package:
     if: github.ref == 'refs/heads/main'
@@ -254,7 +254,7 @@ jobs:
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: packaged-testing.yaml
 
@@ -329,7 +329,7 @@ jobs:
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: packaged-prod.yaml
 
