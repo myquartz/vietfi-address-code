@@ -119,7 +119,6 @@ class ADH:
         # Add more division mappings as needed
     }
 
-    pre_dic = {}        # prefix dictionary for normalization
     pre_map = {}
     # address data structure
     data = {
@@ -161,7 +160,7 @@ class ADH:
         else:
             self.plogger = CustomLogger()
             self.conn = init_conn
-            self.conn.create_function("CASEFOLD", 1, case_fold)
+            # self.conn.create_function("CASEFOLD", 1, case_fold)
             self.conn.create_function("UNIDECODE", 1, uni_decode)
 
         self.plogger.info("Starting new address parsing session")
@@ -173,8 +172,6 @@ class ADH:
 
         # creating dictionary of constants
         self.pre_map = self.create_prefix_mapping()
-        self.pre_dic = self.create_prefix_dictionary()
-
         self.load_special_mapping()
 
     # def __del__(self):
@@ -187,7 +184,14 @@ class ADH:
 
     global uni_decode
     def uni_decode(s: str):
+        s = unicodedata.normalize('NFD', s)
         return unidecode(s)
+
+    @staticmethod
+    def normalize_name(s: str):
+        s = unicodedata.normalize('NFD', s)
+        s = re.sub(r'\s+', ' ', s.replace('-', ' '))
+        return s.lower()
 
     def connect_database(self):
         # Connect to the address database in sqlite3
@@ -200,7 +204,7 @@ class ADH:
                 conn = sqlite3.connect(dbfile)
                 if conn:
                     # print
-                    conn.create_function("CASEFOLD", 1, case_fold)
+                    # conn.create_function("CASEFOLD", 1, case_fold)
                     conn.create_function("UNIDECODE", 1, uni_decode)
                     return conn
                 else:
@@ -220,9 +224,10 @@ class ADH:
         return conn
 
     def create_prefix_mapping(self):
-        _pre_map = {}
+        # map <namespaceset, unit_level> of mapping
+        name2prefix_map = {}
         cur = self.conn.cursor()
-        sql = "select lower(prefix), lower(name), unit_level \
+        sql = "select lower(prefix), name, unit_level, namespaceset \
                from sys_prefix \
                where country_code = ?"
         # print(self.country_code)
@@ -230,54 +235,42 @@ class ADH:
         cur.execute(sql, params)
         rows = cur.fetchall()
         # print(rows)
+
         for row in rows:
-            _pre_map[row[0], row[2]] = row[1]
+            # row[3]: namespaceset is the bitmap of the set of address spaces
+            bitmap = int(row[3])
+            if bitmap != 0:
+                for i in range(0, 32):
+                    if (bitmap & (1 << i)) != 0:
+                        if i+1 not in name2prefix_map:
+                            # index start from 1 namespaceset
+                            name2prefix_map[i+1] = {}
+                        if int(row[2]) not in name2prefix_map[i+1]:
+                            name2prefix_map[i+1][int(row[2])] = {}
+                        name2prefix_map[i+1][int(row[2])][row[0]] = row[1]
+            else:
+                if 0 not in name2prefix_map:
+                    name2prefix_map[0] = {}
+                if int(row[2]) not in name2prefix_map[0]:
+                    name2prefix_map[0][int(row[2])] = {}
+                name2prefix_map[0][int(row[2])][row[0]] = row[1]
 
         cur.close()
-        return _pre_map
+        return name2prefix_map
 
-
-
-    def create_prefix_dictionary(self):
-        # Connect to the SQLite database
-        cur = self.conn.cursor()
-        sql = "select lower(prefix), lower(name), unit_level \
-                       from sys_prefix \
-                       where country_code = ?"
-
-        params = (self.country_code,)
-        cur.execute(sql, params)
-
-        # Initialize the pre_map dictionary
-        pre_map = {}
-
-        # Iterate over the query results
-        for row in cur.fetchall():
-            unit_level = row[2]
-            prefix = row[0]
-            fullname = row[1]
-
-            # Create the nested dictionaries if needed
-            if unit_level not in pre_map:
-                pre_map[unit_level] = {}
-
-            # Add the prefix and fullname to the pre_map dictionary
-            pre_map[unit_level][prefix] = fullname
-
-        # Close the database cursor
-        cur.close()
-
-        return pre_map
-
-    def extend_prefix2fullname(self, word_check: str):
+    def extend_prefix2fullname(self, selected_namespace: int, word_check: str):
+        if(selected_namespace not in self.pre_map):
+            return ""
         """ Extend address with prefix to full name """
         word = word_check.lower().strip()
-        ext = [value + ' ' + word[len(key[0]):].strip() for key, value in self.pre_map.items() if
+        ext = [value + ' ' + word[len(key[0]):].strip() for key, value in self.pre_map[selected_namespace].items() if
                word.startswith(key[0])]
         fullname = ext[0] if ext else ""
         return fullname
 
-    def extend_prefix_to_fullname(self, word_check):
+    def extend_prefix_to_fullname(self, selected_namespace: int, word_check: str):
+        if(selected_namespace not in self.pre_map):
+            return None
         """extend prefix abbreviation into full prefix"""
 
         if re.match(r"^[qQ]\d+.*", word_check):
@@ -285,7 +278,7 @@ class ADH:
         elif re.match(r"^[pP]\d+.*", word_check):
             return self.NORM_PHUONG + word_check[1:].strip()
 
-        for prefix, normalized_prefix in self.pre_map.items():
+        for prefix, normalized_prefix in self.pre_map[selected_namespace].items():
             if word_check.lower().startswith(prefix[0]):
                 return normalized_prefix + word_check[len(prefix[0]):].strip()
 
@@ -348,8 +341,7 @@ class ADH:
             cur.execute(sql)
             for row in cur.fetchall():
                 division_id = row[0]
-                division_name = unicodedata.normalize('NFD', row[1]).strip().replace('-', ' ').lower()
-                division_name = re.sub(r'\s+', ' ', division_name)
+                division_name = self.normalize_name(row[1])
 
                 special_division[division_name] = division_id
 
@@ -377,9 +369,7 @@ class ADH:
             cur.execute(sql)
             for row in cur.fetchall():
                 division_sub_id = row[0]
-                division_sub_name = unicodedata.normalize('NFD', row[1]).replace('-', ' ').lower()
-                division_sub_name = re.sub(r'\s+', ' ', division_sub_name)
-
+                division_sub_name = self.normalize_name(row[1])
                 special_division_sub_div[division_sub_name] = division_sub_id
 
                 # if self.NORM_QUAN in division_sub_name:

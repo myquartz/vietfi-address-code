@@ -1,9 +1,15 @@
 import json
 import os
+import sys
 # os.environ["DB_DIR"] = "./s3-bucket"
 
 import pytest
 import sqlite3
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(script_dir, 'address_code_func'))
+
+from address_code_func import app
 
 #os.chdir(path=os.path.dirname('../address_code_func'))
 
@@ -68,11 +74,12 @@ def apigw_event():
 
 def test_lambda_handler(apigw_event):
     #print("DB_DIR: ", app.DB_DIR)
-    # app.dbcon = sqlite3.connect("s3-bucket/country_div_sub.sqlite3")
-    dbfile = os.getenv('DB_DIR', '/tmp') + '/' + 'address_db.sqlite3'
-    #app.dbcon = sqlite3.connect(dbfile)
-    #ret = app.lambda_handler(apigw_event, "")
-    #data = json.loads(ret["body"])
-    #print(ret)
-    #assert ret["statusCode"] == 200
-    #assert "VNM" in ret["body"]
+    app.dbcon = sqlite3.connect("s3-bucket/address_db.sqlite3")
+    # dbfile = os.getenv('DB_DIR', '/tmp') + '/' + 'address_db.sqlite3'
+    # app.dbcon = sqlite3.connect(dbfile)
+    ret = app.lambda_handler(apigw_event, "")
+    data = json.loads(ret["body"])
+    print(ret)
+    assert ret["statusCode"] == 200
+    assert "VNM" in ret["body"]
+    assert data["namespaces"] == ['before2025', '2025']

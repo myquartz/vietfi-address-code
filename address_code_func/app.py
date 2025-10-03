@@ -14,13 +14,13 @@ Manual setup:
 1. Create sqlite3 data file at local, create tables, index, data..
 2. Copy data file to AWS S3 
    by command (assume "vietfi-api-data" is Bucket Name): 
-   `aws s3 cp country-div-sub.db s3://vietfi-api-data/address_db.db`
+   `aws s3 cp s3-bucket/address_db.sqlite3 s3://vietfi-api-data/prefix/address_db.sqlite3`
 
 How this code works:
 
 1. Load Datafile file from S3 (Object Storage service)
 2. The BucketName from env BUCKET_NAME
-3. Key default to "country-div-sub.db", can be override by DB_FILE_KEY
+3. Key default to "address_db.sqlite3", can be override by DB_FILE_KEY
 4. Credential to authentication with S3 is automatically assigned by Role attach to Function (see template.yaml).
 5. To run sam local invoke or sam local start-api, the credential provided by --profile <name:default> 
 
@@ -35,14 +35,15 @@ bucketName = os.getenv('BUCKET_NAME')
 objectName = os.getenv('DB_FILE_KEY', 'address_db.sqlite3')
 
 client = boto3.client('s3')
-if client is not None and bucketName is not None and not os.path.exists(DB_DIR + "/" + objectName):
+temp_file_name = os.path.join(DB_DIR, objectName.split('/')[-1])
+if client is not None and bucketName is not None and not os.path.exists(temp_file_name):
     print("Loading from s3://" + bucketName + "/" + objectName)
     s3resp = client.get_object(
         Bucket=bucketName,
         Key=objectName
     )
     body = s3resp['Body']
-    with io.FileIO(DB_DIR + "/" + objectName, 'w') as file:
+    with io.FileIO(temp_file_name, 'w') as file:
         while file.write(body.read(amt=4096)):
             pass
 
@@ -54,7 +55,7 @@ corsAllow = os.getenv('CORS_ALLOW_ORIGIN', '*')
 # dbcur = dbconn.cursor()
 # Connect to database
 try:
-    dbconn = sqlite3.connect(DB_DIR + "/" + objectName)
+    dbconn = sqlite3.connect(temp_file_name, check_same_thread=False)
     cur = dbconn.cursor()
 
     if dbconn and cur:
@@ -74,13 +75,14 @@ headers = {
 total = 0
 
 # define API request handlers
-def get_countries(event,context):
+def get_countries(event, context):
     global headers
-    sqlstatement = "SELECT iso3 AS code, nicename AS name FROM sys_country ORDER BY iso3"
+    sqlstatement = "SELECT iso3 AS code, nicename AS name, namespaces FROM sys_country ORDER BY iso3"
     row_cnt = cur.execute(sqlstatement)
     data = json.dumps(list(map(lambda row: {
         "code": row[0],
-        "name": row[1]
+        "name": row[1],
+        "namespaces": row[2].split(',') if row[2] else []
     }, cur.fetchall())))
     return {
         "statusCode": 200,
@@ -92,13 +94,14 @@ def get_country_by_code(event,context):
     global headers
     iso_code = event['pathParameters']['iso_code']
     params = (iso_code,)
-    sqlstatement = "SELECT iso3, nicename FROM sys_country WHERE iso3 = ?"
+    sqlstatement = "SELECT iso3, nicename, namespaces FROM sys_country WHERE iso3 = ?"
     row_cnt = cur.execute(sqlstatement, params)
     row = cur.fetchone()
     if row:
         data = {
             "code": row[0],
-            "name": row[1]
+            "name": row[1],
+            "namespaces": row[2].split(',') if row[2] else []
         }
         status_code = 200
     else:
@@ -112,6 +115,34 @@ def get_country_by_code(event,context):
         }}) if not data else json.dumps(data, ensure_ascii=False),
     }
 
+def db_query_country_namespaces(iso_code):
+    params = (iso_code,)
+    sqlstatement = "SELECT namespaces FROM sys_country WHERE iso3 = ?"
+    row_cnt = cur.execute(sqlstatement, params)
+    ctry = cur.fetchone()
+    if not ctry:
+        return None
+    if ctry[0]:
+        namespaces = ctry[0].split(',')
+        return namespaces
+    return []
+
+def db_query_country_namespace(iso_code,selected_namespace):
+    params = (iso_code,)
+    sqlstatement = "SELECT iso3, nicename, namespaces FROM sys_country WHERE iso3 = ?"
+    row_cnt = cur.execute(sqlstatement, params)
+    ctry = cur.fetchone()
+    if not ctry:
+        return -1
+    if ctry[2] and selected_namespace:
+        # find index of selected_namespace
+        namespaces = ctry[2].split(',')
+        if selected_namespace not in namespaces:
+            return -1
+
+        return 1 + namespaces.index(selected_namespace)    
+    return 0
+
 def get_divisions(event,context):
     global headers
     resource = event['resource']
@@ -119,17 +150,41 @@ def get_divisions(event,context):
     iso_code = event['pathParameters']['iso_code']
     if 'division_code' in event['pathParameters']:
         division_code = event['pathParameters']['division_code']
-    params = (iso_code,)
+    else:
+        division_code = '00'
+    
+    selected_namespace = event['queryStringParameters']['namespace'] if event['queryStringParameters'] and 'namespace' in event['queryStringParameters'] else None
+    selected_ns_pos = db_query_country_namespace(iso_code, selected_namespace)
+    if selected_ns_pos < 0:
+        return {
+            "statusCode": 404,
+            "headers": headers,
+            "body": json.dumps({ "error": {
+                "message": "There are no such country with iso_code=" + iso_code+", namespace=" + (selected_namespace if selected_namespace else "default"),
+            }})
+        }
+    if selected_ns_pos == 0 and selected_namespace:
+        return {
+            "statusCode": 400,
+            "headers": headers,
+            "body": json.dumps({ "error": {
+                "message": "The country with iso_code=" + iso_code + " does not support namespace=" + selected_namespace,
+            }})
+        }
+    # print("selected_ns_pos=", selected_ns_pos)
+    selected_ns_bit = (1 << (selected_ns_pos-1) if selected_ns_pos > 0 else 0)
     sqlstatement = "SELECT a.division_cd, a.division_name, a.country_iso3, local_id \
             , a.divisionid FROM sys_division a \
-            WHERE a.country_iso3 = ?"
+            WHERE a.country_iso3 = ? AND (a.namespaceset & ? > 0 or a.namespaceset = 0) "
     if isEndWithSubdiv:
         sqlstatement += "order by a.divisionid"
+        params = (iso_code, selected_ns_bit)
     else:
-        sqlstatement += " and a.division_cd = ?"
-        params = (iso_code, division_code)
+        sqlstatement += " AND a.division_cd = ?"
+        params = (iso_code, selected_ns_bit, division_code)
 
     row_cnt = cur.execute(sqlstatement, params)
+    print("iso_code=", iso_code, "selected_ns_bit=", selected_ns_bit, "division_code=", division_code, " returns row_cnt=", row_cnt)
     data = None
     status_code = 200
     if isEndWithSubdiv:
@@ -155,7 +210,7 @@ def get_divisions(event,context):
         "statusCode": status_code,
         "headers": headers,
         "body": json.dumps({ "error": {
-            "message": "There are no division under country with iso_code=" + iso_code,
+            "message": "There are no division under country with iso_code=" + iso_code+" and namespace=" + (selected_namespace if selected_namespace else "default") + ("" if isEndWithSubdiv else " and division_code=" + division_code),
         }}) if not data else json.dumps(data, ensure_ascii=False),
     }
 
@@ -167,19 +222,42 @@ def get_subdivisions(event,context):
     division_code = event['pathParameters']['division_code']
     if 'subdiv_code' in event['pathParameters']:
         subdiv_code = event['pathParameters']['subdiv_code']
-    params = (iso_code,division_code)
+    else:
+        subdiv_code = '000'
+    selected_namespace = event['queryStringParameters']['namespace'] if event['queryStringParameters'] and 'namespace' in event['queryStringParameters'] else None
+    selected_ns_pos = db_query_country_namespace(iso_code, selected_namespace)
+    if selected_ns_pos < 0:
+        return {
+            "statusCode": 404,
+            "headers": headers,
+            "body": json.dumps({ "error": {
+                "message": "There are no such country with iso_code=" + iso_code+", namespace=" + (selected_namespace if selected_namespace else "default"),
+            }})
+        }
+    if selected_ns_pos == 0 and selected_namespace:
+        return {
+            "statusCode": 400,
+            "headers": headers,
+            "body": json.dumps({ "error": {
+                "message": "The country with iso_code=" + iso_code + " does not support namespace=" + selected_namespace,
+            }})
+        }
+    # print("selected_ns_pos=", selected_ns_pos)
+    selected_ns_bit = (1 << (selected_ns_pos-1) if selected_ns_pos > 0 else 0)
     sqlstatement = "select a.subdiv_cd, a.l2subdiv_cd, a.subdiv_name, b.division_cd, b.country_iso3 \
         ,a.subdivid from sys_division_sub a, sys_division b \
         where a.divisionid = b.divisionid \
           and a.l2subdiv_cd = '00000' \
-          and b.country_iso3 = ? and b.division_cd = ?"
+          and b.country_iso3 = ? and b.division_cd = ?  and (a.namespaceset & ? > 0 or a.namespaceset = 0) and (b.namespaceset & ? > 0 or b.namespaceset = 0) "
     if isEndWithSubdiv:
         sqlstatement += "order by a.subdivid"
+        params = (iso_code,division_code, selected_ns_bit, selected_ns_bit)
     else:
         sqlstatement += " and a.subdiv_cd = ?"
-        params = (iso_code,division_code,subdiv_code)
+        params = (iso_code, division_code, selected_ns_bit, selected_ns_bit, subdiv_code)
 
     row_cnt = cur.execute(sqlstatement, params)
+    print("iso_code=", iso_code, "selected_ns_bit=", selected_ns_bit, "division_code=", division_code, "subdiv_code=", subdiv_code, " returns row_cnt=", row_cnt)
     data = None
     status_code = 200
     if isEndWithSubdiv:
@@ -206,7 +284,8 @@ def get_subdivisions(event,context):
         "statusCode": status_code,
         "headers": headers,
         "body": json.dumps({ "error": {
-            "message": "Object not found for country=" + iso_code + " and div_code="+division_code,
+            "message": "Object not found for country=" + iso_code + ", namespace=" + (selected_namespace if selected_namespace else "default") + 
+                " and div_code="+division_code + ("" if isEndWithSubdiv else " and subdiv_code=" + subdiv_code),
         } }) if not data else json.dumps(data, ensure_ascii=False),
     }
 
@@ -219,18 +298,43 @@ def get_l2subdivisions(event,context):
     subdiv_code = event['pathParameters']['subdiv_code']
     if 'l2subdiv_code' in event['pathParameters']:
         l2subdiv_code = event['pathParameters']['l2subdiv_code']
-    params = (iso_code, division_code, subdiv_code,)
+    else:
+        l2subdiv_code = '00000'
+    
+    selected_namespace = event['queryStringParameters']['namespace'] if event['queryStringParameters'] and 'namespace' in event['queryStringParameters'] else None
+    selected_ns_pos = db_query_country_namespace(iso_code, selected_namespace)
+    if selected_ns_pos < 0:
+        return {
+            "statusCode": 404,
+            "headers": headers,
+            "body": json.dumps({ "error": {
+                "message": "There are no such country with iso_code=" + iso_code +", namespace=" + (selected_namespace if selected_namespace else "default"),
+            }})
+        }
+    if selected_ns_pos == 0 and selected_namespace:
+        return {
+            "statusCode": 400,
+            "headers": headers,
+            "body": json.dumps({ "error": {
+                "message": "The country with iso_code=" + iso_code + " does not support namespace=" + selected_namespace,
+            }})
+        }
+
+    selected_ns_bit = (1 << (selected_ns_pos-1) if selected_ns_pos > 0 else 0)
     sqlstatement = "select a.subdiv_cd, a.l2subdiv_cd, a.subdiv_name, b.division_cd, b.country_iso3 \
         from sys_division_sub a, sys_division b \
         where a.divisionid = b.divisionid \
-          and b.country_iso3 = ? and b.division_cd = ? and a.subdiv_cd = ?"
+          and b.country_iso3 = ? and b.division_cd = ? and a.subdiv_cd = ?  and (a.namespaceset & ? > 0 or a.namespaceset = 0) and (b.namespaceset & ? > 0 or b.namespaceset = 0) "
     if isEndWithSubdiv:
         sqlstatement += "order by a.subdiv_name"
+        params = (iso_code, division_code, subdiv_code, selected_ns_bit, selected_ns_bit)
     else:
         sqlstatement += " and a.l2subdiv_cd = ?"
-        params = (iso_code, division_code, subdiv_code, l2subdiv_code)
+        params = (iso_code, division_code, subdiv_code, selected_ns_bit, selected_ns_bit, l2subdiv_code)
         
     row_cnt = cur.execute(sqlstatement, params)
+    print("iso_code=", iso_code, "selected_ns_bit=", selected_ns_bit, "division_code=", division_code, "subdiv_code=", subdiv_code,
+            "l2subdiv_code=", l2subdiv_code, " returns row_cnt=", row_cnt)
     data = None
     status_code = 200
     if isEndWithSubdiv:
@@ -257,7 +361,8 @@ def get_l2subdivisions(event,context):
         "statusCode": status_code,
         "headers": headers,
         "body": json.dumps({ "error": {
-            "message": "Object not found for country_code=" + iso_code + " and div_code="+division_code + "and subdiv_code=" + subdiv_code,
+            "message": "Object not found for country_code=" + iso_code + " and div_code="+division_code + 
+                ("" if isEndWithSubdiv else " and subdiv_code=" + subdiv_code) + ("" if isEndWithSubdiv else " and l2subdiv_code=" + l2subdiv_code),
         } }) if not data else json.dumps(data, ensure_ascii=False),
     }
 
@@ -280,26 +385,40 @@ def post_address_parser(event, context):
     # Calling function from class AddressParser
     # ...
     ap = AP(init_conn=dbconn)
+    
+    # Listing namespaces
+    namespaces = db_query_country_namespaces('VNM')
+    if namespaces is None:
+        return {
+            "statusCode": 404,
+            "headers": headers,
+            "body": json.dumps({ "error": {
+                "message": "There are no such country with iso_code={" + 'VNM' + "}"
+            }})
+        }
+    namespaces_bit = [i+1 for i in range(len(namespaces))]
+    if len(namespaces) == 0:
+        namespaces_bit = [0]
     # Build the response payload
-    response_payload = ap.detect_address(address_text)
-
-    # # sample response_payload
-    # response_payload = {
-    #     'country_code': 'VNM',
-    #     'division_name': 'Thành phố Hà nội',
-    #     'division_code': 'VN-HN',
-    #     'subdivision_name': 'Quận Long Biên',
-    #     'subdivision_code': '004',
-    #     'l2subdivision_name': 'Phường Gia Thuỵ',
-    #     'l2suvdiv_code': '00130',
-    #     'address_line': 'Số 18/25 Nguyễn Văn Cừ'
-    # }
-
+    data = ap.detect_address(namespaces_bit, address_text)
+    result = []
+    
+    for ns in namespaces_bit:
+        r = data[ns]
+        n = namespaces[ns-1] if ns > 0 else 'default'
+        r['namespace'] = n
+        result.append(r)
     # Return the response
     return {
         "statusCode": 200,
         "headers": headers,
-        "body": json.dumps(response_payload)
+        "body": json.dumps({
+            "country_code": "VNM",
+            "has_default_ns": True if 0 in namespaces_bit else False,
+            "namespaces": namespaces,
+            "input": address_text,
+            "result": result
+        })
     }
 
 # define API routes

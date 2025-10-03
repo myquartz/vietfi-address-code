@@ -33,10 +33,10 @@ sam deploy --guided
 You can find your API Gateway Endpoint URL in the output values displayed after deployment.
 
 ```bash
-aws s3 cp s3-bucket/* s3://vietfi-api-data/
+aws s3 cp s3-bucket/address_db.sqlite3 s3://vietfi-api-data/vietfi-address-dev/address_db.sqlite3
 ```
 
-> Note: Function needs data file uploaded to Bucket, change bucket name `vietfi-api-data` as your S3 bucket name.
+> Note: Function needs data file uploaded to Bucket, change bucket name `vietfi-api-data` as your S3 bucket name. The `vietfi-address-dev/` is the directory for your development database.
 > After grant S3 Bucket for public access of index.html, now you can access to https://vietfi-api-data.s3.ap-southeast-1.amazonaws.com/index.html for demostration.
 
 
@@ -67,14 +67,15 @@ $ curl http://localhost:3000/countries
 Tests are defined in the `tests` folder in this project. Use PIP to install the test dependencies and run tests.
 
 ```bash
-$ pip3.9 install -r tests/requirements.txt --user
+$ pip3 install --break-system-packages --user -r tests/requirements.txt --user
 # unit test
-$ python3.9 -m pytest tests/unit -v
+$ python3 -m pytest tests/unit -v
 # or running in debug mode with port
-$ python3.9 -m debugpy --wait-for-client --listen 5678 -m pytest tests/unit
+$ python3 -m debugpy --wait-for-client --listen 5678 -m pytest tests/unit
 # integration test, requiring deploying the stack first.
+$ sam deploy
 # Create the env variable AWS_SAM_STACK_NAME with the name of the stack we are testing
-$ AWS_SAM_STACK_NAME=vietfi-address-code python -m pytest tests/integration -v
+$ AWS_SAM_STACK_NAME=vietfi-address-dev python3 -m pytest tests/integration -v
 ```
 
 ## Cleanup
@@ -82,7 +83,7 @@ $ AWS_SAM_STACK_NAME=vietfi-address-code python -m pytest tests/integration -v
 To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
 
 ```bash
-aws cloudformation delete-stack --stack-name vietfi-address-code
+aws cloudformation delete-stack --stack-name vietfi-address-dev
 ```
 
 ## Resources

@@ -4,14 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Address Code demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" 
-      integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   </head>
   <body onload="onLoad()">
     <div class="container">
       <!-- Content here -->
       <h1>Hello, This is Geography Division Hierarchy Demo!</h1>
       <p>Our dataset currently supports for Vietnam's Division and limited for Singapore, Thailand, Cambodia and Laos</p>
+
+      <div class="alert alert-info" role="alert">
+        <strong>News:</strong> We have updated API to support multiple namespaces per country. Please select namespace if applicable after selecting country.
+        <p>For example, Vietnam has 2 namespaces: "before2025" (which includes District level) and "2025" (which collapses to District into Ward level)</p>
+      </div>
 
       <div class="mb-3" id="errorbox">
         </div>
@@ -42,9 +46,15 @@
           <div id="countryHelp" class="form-text">Please select country first</div>
         </div>
         <div class="mb-3">
+          <label for="namespaceSelect" class="form-label">Namespace (if applicable)</label>
+          <select id="namespaceSelect" class="form-select" aria-label="Namespace selection" onchange="selectNamespace(document.getElementById('countrySelect').value, this)">
+          </select>
+          <div id="countryHelp" class="form-text">Please select country first</div>
+        </div>
+        <div class="mb-3">
           <label for="divisionSelect" class="form-label">Division</label>
           <select id="divisionSelect" class="form-select" aria-label="Division selection"
-            onchange="selectDivision(document.getElementById('countrySelect').value, this)">
+            onchange="selectDivision(document.getElementById('countrySelect').value, document.getElementById('namespaceSelect').value, this)">
             <option value="" selected>- select country first -</option>
           </select>
           <div id="countryCode" class="form-text">Listing Division in country code: <span></span></div>
@@ -52,7 +62,7 @@
         <div class="mb-3">
           <label for="subDivSelect" class="form-label">Sub Division</label>
           <select id="subDivSelect" class="form-select" aria-label="Sub division selection"
-          onchange="selectSubDivision(document.getElementById('countrySelect').value, document.getElementById('divisionSelect').value, this)">
+          onchange="selectSubDivision(document.getElementById('countrySelect').value, document.getElementById('namespaceSelect').value, document.getElementById('divisionSelect').value, this)">
             <option value="" selected>- select division please -</option>
           </select>
           <div id="divisionCode" class="form-text">Listing Sub-Division in Division code: <span></span></div>
@@ -77,16 +87,44 @@
           <label for="addressText" class="form-label">Address String</label>
           <input id="addressText" name="adt" required="yes" class="form-control">
           
-          <div id="countryHelp" class="form-text">Please enter an address text likes "10 Lý quốc sư, phường Hàng Trống, Hoàn Kiếm, Hà Nội" </div>
+          <div id="countryHelp" class="form-text">Please enter an address text likes the following exampels:
+            <ul>
+              <li>"10 Lý quốc sư, phường Hàng Trống, Hoàn Kiếm, Hà Nội"</li>
+              <li>"123 Đường ABC, Phường XYZ, Quận 1, TP. HCM"</li>
+              <li>"số 5 Lê Lợi, phường Vĩnh Ninh, thành phố Huế"</li>
+              <li>"319 Lý Thường Kiệt, Phường Phú Thọ, TP. HCM"</li>
+              <li>"319 Lý Thường Kiệt, Phường 15, Quận 11, TP. HCM"</li>
+            </ul>
         </div>
 
         <ul class="list-group">
           <li class="list-group-item" id="g_country_code">Country code (ISO) <strong></strong> <span></span></li>
-          <li class="list-group-item" id="g_division">Division code (ISO and GSO) <strong></strong> <span></span></li>
-          <li class="list-group-item" id="g_subdivision">Sub Division (GSO) <strong></strong> <span></span></li>
-          <li class="list-group-item" id="g_l2subdivision">L2 Sub division (GSO) <strong></strong> <span></span></li>
-          <li class="list-group-item" id="g_address">Address Line: <span></span></li>
+          <li class="list-group-item" id="g_namespace_list">Namespaces (detected) <strong></strong> <span></span></li>
         </ul>
+        <h5 id="g_namespace_0">Namespace result 0: <span></span></h5>
+        <ul class="list-group">
+          <li class="list-group-item" id="g_division_0">Division <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_subdivision_0">Sub-Division <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_l2subdivision_0">Level 2 Sub-Division <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_address_0">Address <strong></strong> <span></span></li>
+        </ul>
+
+        <h5 id="g_namespace_1">Namespace result 1: <span>(if applicable)</span></h5>
+        <ul class="list-group">
+          <li class="list-group-item" id="g_division_1">Division <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_subdivision_1">Sub-Division <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_l2subdivision_1">Level 2 Sub-Division <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_address_1">Address <strong></strong> <span></span></li>
+        </ul>
+
+        <h5 id="g_namespace_2">Namespace result 2: <span>(if applicable)</span></h5>
+        <ul class="list-group">
+          <li class="list-group-item" id="g_division_2">Division <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_subdivision_2">Sub-Division <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_l2subdivision_2">Level 2 Sub-Division <strong></strong> <span></span></li>
+          <li class="list-group-item" id="g_address_2">Address <strong></strong> <span></span></li>
+        </ul>
+
         <div class="mb-3" id="atv_result">
          Result here
         </div>
@@ -96,19 +134,20 @@
 
       <div id="specification-tab-pane"
         class="tab-pane fade" role="tabpanel" aria-labelledby="specification-tab" tabindex="0">
-        
+        Please refer to my GitHub <a href="https://github.com/myquartz/vietfi-address-code" target="_blank">repository</a> for more information.
       </div>
       </div><!-- of tab content -->
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" 
-      integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
     <script>
       var apiURL = '{API_URL}';
-      if(apiURL == '' || apiURL.substr(0,1) == '{' && apiURL.indexOf('API_URL')>0)
-        apiURL = 'https://api.vietfi.net/address/v1';
-      
+      if(apiURL == '' || apiURL.substr(0,1) == '{' && apiURL.indexOf('API_URL')>0) {
+        apiURL = prompt("Please enter your API URL here, leave blank to use public API URL", "https://api.vietfi.net/address/v1").trim();
+      }
+      var countryNamespaces = {};
+
       function onLoad() {
         fetch(apiURL+"/countries")
           .then(function(resp) {
@@ -128,6 +167,7 @@
               opt.value = c.code;
               opt.text = c.name;
               elm.add(opt);
+              countryNamespaces[c.code] = c.namespaces;
             });
         })
         .catch(function(e) {
@@ -139,7 +179,42 @@
         jQuery('#countryCode span').text(elm.value);
         if(elm.value) {
           jQuery('#countryCode span').text(elm.value);
-          fetch(apiURL+"/countries/"+elm.value+"/divisions")
+          var ns = countryNamespaces[elm.value];
+          if(ns && ns.length>0) {
+            var nsElm = document.getElementById('namespaceSelect');
+            nsElm.length = 0;
+            var def = document.createElement('option');
+            def.value = '';
+            def.text = '-- please select --';
+            nsElm.add(def);
+            ns.forEach(n => {
+              var opt = document.createElement('option');
+              opt.value = n;
+              opt.text = n;
+              nsElm.add(opt);
+            });
+            nsElm.disabled = false;
+          }
+          else {
+            var nsElm = document.getElementById('namespaceSelect');
+            nsElm.length = 0;
+            var def = document.createElement('option');
+            def.value = '';
+            def.text = '-- default only --';
+            nsElm.add(def);
+            nsElm.disabled = true;
+            selectNamespace(elm.value, {value:''});//auto select default namespace
+          }
+        }
+        else {
+          //clear all except first item
+          document.getElementById('namespaceSelect').length = 0;
+          document.getElementById('divisionSelect').length = 1;
+        }
+      }
+
+      function selectNamespace(country_code, elm) {
+          fetch(apiURL+"/countries/"+country_code+"/divisions?namespace="+elm.value)
             .then(function(resp) {
               if(resp.status != 200)
                 throw "HTTP Error "+resp.status;
@@ -166,16 +241,12 @@
             .catch(function(e) {
               jQuery("errorbox").addClass("alert alert-warning").text(JSON.stringify(e??'Network or Unknow error'));
             });
-        }
-        else
-        //clear all except first item
-          document.getElementById('divisionSelect').length = 1;
       }
 
-      function selectDivision(ctry, elm) {
+      function selectDivision(ctry, namespace, elm) {
         jQuery('#divisionCode span').text(elm.value);
         if(elm.value) {
-          fetch(apiURL+"/countries/"+ctry+"/divisions/"+elm.value+"/subdivisions")
+          fetch(apiURL+"/countries/"+ctry+"/divisions/"+elm.value+"/subdivisions?namespace="+namespace)
             .then(function(resp) {
               if(resp.status != 200)
                 throw "HTTP Error "+resp.status;
@@ -206,10 +277,10 @@
           document.getElementById('divisionSelect').length = 1;
       }
 
-      function selectSubDivision(ctry, div, elm) {
+      function selectSubDivision(ctry, namespace, div, elm) {
         jQuery('#subDivisionCode span').text(elm.value);
         if(elm.value) {
-          fetch(apiURL+"/countries/"+ctry+"/divisions/"+div+"/subdivisions/"+elm.value+"/l2subdivisions")
+          fetch(apiURL+"/countries/"+ctry+"/divisions/"+div+"/subdivisions/"+elm.value+"/l2subdivisions?namespace="+namespace)
             .then(function(resp) {
               if(resp.status != 200)
                 throw "HTTP Error "+resp.status;
@@ -242,17 +313,22 @@
         jQuery('#selection_result span').text(JSON.stringify([f.elements[0].value,
                                                          f.elements[1].value,
                                                          f.elements[2].value,
-                                                         f.elements[3].value])); 
+                                                         f.elements[3].value,
+                                                         f.elements[4].value])); 
         return false;
       }
       
       function address_detect(f) {
         if(f.adt) {
+          var ns = 0;
           jQuery('#g_country_code strong').text('');
-          jQuery('#g_division strong').text('').next().text('');
-          jQuery('#g_subdivision strong').text('').next().text('');
-          jQuery('#g_l2subdivision strong').text('').next().text('');
-          jQuery('#g_address span').text('');
+          jQuery('#g_namespace_list strong').text('');
+          for(ns=0; ns<3; ns++) {
+            jQuery('#g_division_'+ns+' strong').text('').next().text('');
+            jQuery('#g_subdivision_'+ns+' strong').text('').next().text('');
+            jQuery('#g_l2subdivision_'+ns+' strong').text('').next().text('');
+            jQuery('#g_address_'+ns+' strong').text('').next().text('');
+          }
           
           fetch(apiURL+"/address-guess",{ method: "post", mode:"cors",headers:
                                    {"Content-type":"application/json"},
@@ -267,11 +343,29 @@
             })
             .then(function(data) {
               jQuery('#atv_result').text(JSON.stringify(data));
-              jQuery('#g_country_code strong').text(data.country_code);
-              jQuery('#g_division strong').text(data.division_iso + ' '+data.division_local_id).next().text(data.division_name);
-              jQuery('#g_subdivision strong').text(data.subdiv_local_id).next().text(data.subdiv_name);
-              jQuery('#g_l2subdivision strong').text(data.l2subdiv_local_id).next().text(data.l2subdiv_name);
-              jQuery('#g_address span').text(data.address_line);
+              jQuery('#g_country_code strong').text(data?.country_code??'');
+            
+              if(data.hasOwnProperty('namespaces')) {
+                jQuery('#g_namespace_list strong').text(data.namespaces.join(', '));
+                var ns = data?.has_default_ns ? 0 : 1;
+                data.result.forEach(r => {
+                  jQuery('#g_namespace_'+ns+' span').text(r.namespace);
+                  jQuery('#g_division_'+ns+' strong').text(r.division_code + ' '+r.division_local_id).next().text(r.division_name);
+                  jQuery('#g_subdivision_'+ns+' strong').text(r.subdiv_local_id).next().text(r.subdiv_name);
+                  jQuery('#g_l2subdivision_'+ns+' strong').text(r.l2subdiv_local_id).next().text(r.l2subdiv_name);
+                  jQuery('#g_address_'+ns+' strong').text(r.address_line);
+                  ns++;
+                });
+              }
+              else {
+                var ns = 0;
+                jQuery('#g_namespace_list strong').text('default only');
+                jQuery('#g_namespace_'+ns+' span').text('default');
+                jQuery('#g_division_'+ns+' strong').text(data?.division_iso ?? data.division_code + ' '+data.division_local_id).next().text(data.division_name);
+                jQuery('#g_subdivision_'+ns+' strong').text(data.subdiv_local_id).next().text(data.subdiv_name);
+                jQuery('#g_l2subdivision_'+ns+' strong').text(data.l2subdiv_local_id).next().text(data.l2subdiv_name);
+                jQuery('#g_address_'+ns+' strong').text(data.address_line);
+              }
             })
             .catch(function(e) {
               //alert(e);

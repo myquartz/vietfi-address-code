@@ -48,7 +48,7 @@ jobs:
           use-installer: true
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.13'
           cache: 'pip' 
       - run: |
           # trigger the tests here
@@ -56,37 +56,6 @@ jobs:
           pip install -r tests/requirements.txt
           export PYTHONPATH="${PYTHONPATH}:$(pwd)/address_code_func:$(pwd)"
           python -m pytest tests/unit
-
-  delete-feature:
-    if: startsWith(github.event.ref, 'feature') && github.event_name == 'delete'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/setup-sam@v2
-        with:
-          use-installer: true
-
-      - name: Assume the testing pipeline user role
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          aws-access-key-id: ${{ env.PIPELINE_USER_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ env.PIPELINE_USER_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.TESTING_REGION }}
-          role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: testing-packaging
-          role-duration-seconds: 3600
-          role-skip-session-tagging: true
-
-      - name: Delete feature branch stack
-        env:
-          FEATURE_BRANCH_NAME: ${{ github.event.ref }}
-        run: |
-          FEATURE_STACK_NAME=$(echo ${FEATURE_BRANCH_NAME##*/} | tr -cd '[a-zA-Z0-9-]')
-          sam delete \
-            --stack-name ${FEATURE_STACK_NAME} \
-            --region ${TESTING_REGION} \
-            --no-prompts
-          aws s3 rm s3://${TESTING_S3_BUCKET}/${FEATURE_STACK_NAME}.html
 
   build-and-deploy-feature:
     # this stage is triggered only for feature branches (feature*),
@@ -117,21 +86,24 @@ jobs:
       - name: Deploy to feature stack in the testing account
         shell: bash
         run: |
-          sam deploy --stack-name $(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-]') \
+          FEATURE_STACK_NAME=$(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-]')
+          sam deploy --stack-name ${FEATURE_STACK_NAME} \
             --capabilities CAPABILITY_IAM \
             --region ${TESTING_REGION} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
-            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
+            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
+            --parameter-overrides BucketName=${TESTING_S3_BUCKET} DataFileKey=${FEATURE_STACK_NAME}/address_db.sqlite3 CorsAllowOrigin="\'https://${TESTING_S3_BUCKET}.s3.${TESTING_REGION}.amazonaws.com\'"
+          aws s3 cp s3-bucket/address_db.sqlite3 s3://${TESTING_S3_BUCKET}/${FEATURE_STACK_NAME}/address_db.sqlite3
       - name: Generate HTML Demo Page
         shell: bash
         run: |
-          FEATURE_STACK_NAME=$(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-_]')
+          FEATURE_STACK_NAME=$(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-]')
           API_HOST=$(aws cloudformation describe-stack-resources --stack-name ${FEATURE_STACK_NAME} \
             --query '(StackResources[?LogicalResourceId==`AddressCodeApi`].PhysicalResourceId)[0]')
           API_STAGE=$(aws cloudformation describe-stack-resources --stack-name ${FEATURE_STACK_NAME} \
             --query '(StackResources[?LogicalResourceId==`AddressCodeApiProdStage`].PhysicalResourceId)[0]')
-          API_URL=https://${API_HOST//\"/}.execute-api.${TESTING_REGION}.amazonaws.com/${API_STAGE//\"/}
+          API_URL=https://${API_HOST//\"/}.execute-api.${TESTING_REGION}.amazonaws.com/${API_STAGE//\"/}          
           sed 's|{API_URL}|'$API_URL'|g' s3-bucket/index.html > feature.html
           aws s3 cp feature.html s3://${TESTING_S3_BUCKET}/${FEATURE_STACK_NAME}.html
           aws s3api put-object-acl --bucket ${TESTING_S3_BUCKET} --key ${FEATURE_STACK_NAME}.html --acl public-read
@@ -166,7 +138,9 @@ jobs:
             --region ${TESTING_REGION} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
-            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
+            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
+            --parameter-overrides BucketName=${TESTING_S3_BUCKET} DataFileKey=${TESTING_STACK_NAME}/address_db.sqlite3 CorsAllowOrigin="\'https://${TESTING_S3_BUCKET}.s3.${TESTING_REGION}.amazonaws.com\'"
+          aws s3 cp s3-bucket/address_db.sqlite3 s3://${TESTING_S3_BUCKET}/${TESTING_STACK_NAME}/address_db.sqlite3
       - name: Generate HTML Demo Page
         shell: bash
         run: |
@@ -179,6 +153,38 @@ jobs:
           sed 's|{API_URL}|'$API_URL'|g' s3-bucket/index.html > temp.html
           aws s3 cp temp.html s3://${TESTING_S3_BUCKET}/${BUG_STACK_NAME}.html
           aws s3api put-object-acl --bucket ${TESTING_S3_BUCKET} --key ${BUG_STACK_NAME}.html --acl public-read
+
+  delete-feature:
+    if: startsWith(github.event.ref, 'feature') && github.event_name == 'delete'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Assume the testing pipeline user role
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{ env.PIPELINE_USER_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.PIPELINE_USER_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.TESTING_REGION }}
+          role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
+          role-session-name: testing-packaging
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      - name: Delete feature branch stack
+        env:
+          FEATURE_BRANCH_NAME: ${{ github.event.ref }}
+        run: |
+          FEATURE_STACK_NAME=$(echo ${FEATURE_BRANCH_NAME##*/} | tr -cd '[a-zA-Z0-9-]')
+          sam delete \
+            --stack-name ${FEATURE_STACK_NAME} \
+            --region ${TESTING_REGION} \
+            --no-prompts
+          aws s3 rm s3://${TESTING_S3_BUCKET}/${FEATURE_STACK_NAME}.html
+          aws s3 cp s3://${TESTING_S3_BUCKET}/${FEATURE_STACK_NAME}/address_db.sqlite3
 
   build-and-package:
     if: github.ref == 'refs/heads/main'
@@ -211,7 +217,7 @@ jobs:
             --region ${TESTING_REGION} \
             --output-template-file packaged-testing.yaml
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: packaged-testing.yaml
           path: packaged-testing.yaml
@@ -234,7 +240,7 @@ jobs:
             --region ${PROD_REGION} \
             --output-template-file packaged-prod.yaml
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: packaged-prod.yaml
           path: packaged-prod.yaml
@@ -271,7 +277,9 @@ jobs:
             --region ${TESTING_REGION} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
-            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
+            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
+            --parameter-overrides BucketName=${TESTING_S3_BUCKET} DataFileKey=${TESTING_STACK_NAME}/address_db.sqlite3 CorsAllowOrigin="\'https://${TESTING_S3_BUCKET}.s3.${TESTING_REGION}.amazonaws.com\'"
+          aws s3 cp s3-bucket/address_db.sqlite3 s3://${TESTING_S3_BUCKET}/${TESTING_STACK_NAME}/address_db.sqlite3
       - name: Generate HTML Demo Page
         shell: bash
         run: |
@@ -292,7 +300,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.13'
           cache: 'pip' 
       - name: Assume the testing pipeline user role
         uses: aws-actions/configure-aws-credentials@v1-node16
@@ -344,7 +352,9 @@ jobs:
             --region ${PROD_REGION} \
             --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
-            --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE}
+            --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
+            --parameter-overrides BucketName=${PROD_S3_BUCKET} DataFileKey=${PROD_STACK_NAME}/address_db.sqlite3 CorsAllowOrigin="\'https://${PROD_S3_BUCKET}.s3.${PROD_REGION}.amazonaws.com\'"
+          aws s3 cp s3-bucket/address_db.sqlite3 s3://${PROD_S3_BUCKET}/${PROD_STACK_NAME}/address_db.sqlite3
       - name: Generate HTML Demo Page
         shell: bash
         run: |            
