@@ -7134,7 +7134,7 @@ SELECT divisionid, v.local_id, v.subdiv_name, '00000', CASE WHEN v.subdiv_name L
 JOIN sys_division_2025 v ON d.local_id = v.division_local_id
 WHERE country_iso3 = 'VNM' AND namespaceset & 2 > 0;
 
-INSERT INTO sys_division_sub(divisionid, subdiv_cd, subdiv_name, l2subdiv_cd, namespaceset)
+INSERT INTO sys_division_sub(divisionid, subdiv_cd, l2subdiv_cd, subdiv_name, namespaceset)
 SELECT divisionid, '000', '00000', '(không có cấp dưới)', 2 FROM sys_division d 
 WHERE country_iso3 = 'VNM' AND namespaceset & 2 > 0;
 
